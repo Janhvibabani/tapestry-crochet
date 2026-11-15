@@ -13,6 +13,9 @@ interface Props {
   highlightRow?: number;
   current?: Position;
   onCellClick?(p: Position): void;
+  /** Paint mode: called once when a stroke starts, then for every stitch the pointer crosses. */
+  onPaintStart?(): void;
+  onPaint?(p: Position): void;
   showRowNumbers?: boolean;
   label: string;
 }
@@ -24,8 +27,9 @@ export function gutterWidth(showRowNumbers: boolean | undefined) {
 }
 
 /** Canvas rendering of the stitch grid. Row numbers run up the left side, Row 1 at the bottom. */
-export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onCellClick, showRowNumbers, label }: Props) {
+export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onCellClick, onPaintStart, onPaint, showRowNumbers, label }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const painting = useRef(false);
   const rows = grid.length;
   const cols = grid[0]?.length ?? 0;
   const gutter = gutterWidth(showRowNumbers);
@@ -107,39 +111,61 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onC
     }
   }, [grid, palette, cellSize, highlightRow, current, rows, cols, gutter, width, height, showRowNumbers]);
 
+  const cellAt = (e: React.PointerEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>): Position | null => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left - gutter - pad) / cellSize);
+    const y = Math.floor((e.clientY - r.top - pad) / cellSize);
+    if (x < 0 || x >= cols || y < 0 || y >= rows) return null;
+    return { row: rows - y, col: x };
+  };
+
   return (
     <canvas
       ref={ref}
       role="img"
       aria-label={label}
-      style={{ width, height }}
-      className={`block max-w-none ${onCellClick ? "cursor-pointer" : ""}`}
+      style={{ width, height, touchAction: onPaint ? "none" : undefined }}
+      className={`block max-w-none ${onPaint ? "cursor-crosshair" : onCellClick ? "cursor-pointer" : ""}`}
       onClick={(e) => {
-        if (!onCellClick) return;
-        const r = e.currentTarget.getBoundingClientRect();
-        const x = Math.floor((e.clientX - r.left - gutter - pad) / cellSize);
-        const y = Math.floor((e.clientY - r.top - pad) / cellSize);
-        if (x < 0 || x >= cols || y < 0 || y >= rows) return;
-        onCellClick({ row: rows - y, col: x });
+        if (onPaint || !onCellClick) return;
+        const p = cellAt(e);
+        if (p) onCellClick(p);
       }}
+      onPointerDown={(e) => {
+        if (!onPaint) return;
+        const p = cellAt(e);
+        if (!p) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        painting.current = true;
+        onPaintStart?.();
+        onPaint(p);
+      }}
+      onPointerMove={(e) => {
+        if (!onPaint || !painting.current) return;
+        const p = cellAt(e);
+        if (p) onPaint(p);
+      }}
+      onPointerUp={() => (painting.current = false)}
+      onPointerCancel={() => (painting.current = false)}
     />
   );
 }
 
-/** Cell size that fits `cols` stitches into the element's width. */
-export function useFitCellSize(ref: RefObject<HTMLElement | null>, cols: number, gutter: number, min = 3, max = 24) {
+/** Cell size that fits `cols` stitches into the element's width (and `rows` into its height, if given). */
+export function useFitCellSize(ref: RefObject<HTMLElement | null>, cols: number, gutter: number, min = 3, max = 24, rows?: number) {
   const [size, setSize] = useState(10);
   useEffect(() => {
     const el = ref.current;
     if (!el || !cols) return;
     const update = () => {
-      const w = el.clientWidth - gutter - 12;
-      setSize(Math.max(min, Math.min(max, Math.floor(w / cols))));
+      let s = Math.floor((el.clientWidth - gutter - 12) / cols);
+      if (rows) s = Math.min(s, Math.floor((el.clientHeight - 12) / rows));
+      setSize(Math.max(min, Math.min(max, s)));
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [ref, cols, gutter, min, max]);
+  }, [ref, cols, gutter, min, max, rows]);
   return size;
 }

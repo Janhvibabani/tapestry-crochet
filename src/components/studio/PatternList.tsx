@@ -26,18 +26,44 @@ export function RunChip({ color, count, palette, active }: { color: number; coun
   );
 }
 
-export function PatternList({ grid, palette, handedness }: { grid: Grid; palette: PaletteColor[]; handedness: Handedness }) {
+export function PatternList({
+  grid,
+  palette,
+  handedness,
+  onDeleteRow,
+  className = "max-h-[32rem]",
+}: {
+  grid: Grid;
+  palette: PaletteColor[];
+  handedness: Handedness;
+  onDeleteRow?(row: number): void;
+  className?: string;
+}) {
   const rows = buildPattern(grid, handedness);
+  const canDelete = onDeleteRow && rows.length > 1;
   return (
-    <ol className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
+    <ol className={`space-y-2 overflow-y-auto pr-1 ${className}`}>
       {rows.map((r) => (
-        <li key={r.row} className="flex flex-wrap items-center gap-1.5 border-b border-dashed border-ink/20 pb-2">
-          <span className="mr-1 w-20 shrink-0 font-display">
-            row {r.row} <DirectionArrow direction={r.direction} />
-          </span>
-          {r.runs.map((run, i) => (
-            <RunChip key={i} color={run.color} count={run.count} palette={palette} />
-          ))}
+        <li key={r.row} className="group flex items-start gap-1.5 border-b border-dashed border-ink/20 pb-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <span className="mr-1 w-20 shrink-0 font-display">
+              row {r.row} <DirectionArrow direction={r.direction} />
+            </span>
+            {r.runs.map((run, i) => (
+              <RunChip key={i} color={run.color} count={run.count} palette={palette} />
+            ))}
+          </div>
+          {canDelete && (
+            <button
+              type="button"
+              aria-label={`delete row ${r.row}`}
+              title={`delete row ${r.row}`}
+              onClick={() => onDeleteRow(r.row)}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-xl text-ink-soft hover:bg-blush hover:text-ink sm:h-9 sm:w-9 sm:opacity-40 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            >
+              ×
+            </button>
+          )}
         </li>
       ))}
     </ol>

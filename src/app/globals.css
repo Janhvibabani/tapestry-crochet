@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme static {
   --color-cream: #fbf5e9;
   --color-paper: #fffaf0;
   --color-ink: #5b3a29;
@@ -79,4 +79,40 @@ body {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Studio: settings + colours on the left, preview in the middle, rows on the right. */
+.studio {
+  display: grid;
+  gap: 2rem;
+  grid-template-areas: "settings" "preview" "palette" "rows";
+}
+@media (min-width: 1024px) {
+  .studio {
+    grid-template-columns: 20rem minmax(0, 1fr);
+    grid-template-areas: "settings preview" "palette preview" "palette rows";
+    align-items: start;
+  }
+}
+@media (min-width: 1280px) {
+  .studio {
+    grid-template-columns: 20rem minmax(0, 1fr) minmax(22rem, 27rem);
+    grid-template-areas: "settings preview rows" "palette preview rows";
+  }
+  .studio-rows {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100dvh - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.dotted {
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(circle, #f2dfc9 1.6px, transparent 1.8px),
+    radial-gradient(circle, #e9e3f3 1.4px, transparent 1.6px);
+  background-size: 26px 26px, 26px 26px;
+  background-position: 0 0, 13px 13px;
 }

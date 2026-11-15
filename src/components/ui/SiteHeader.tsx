@@ -13,7 +13,7 @@ const links = [
 export function SiteHeader() {
   const path = usePathname();
   return (
-    <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:pt-6">
+    <header className="mx-auto flex w-full max-w-[1720px] flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:pt-6 lg:px-8">
       <Link href="/" className="group flex min-h-11 items-center gap-2 rounded-lg">
         <Star className="h-8 w-8 transition-transform group-hover:rotate-12" />
         <span className="font-display text-2xl sm:text-3xl">tiny tapestry</span>

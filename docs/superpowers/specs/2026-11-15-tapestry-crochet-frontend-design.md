@@ -188,3 +188,13 @@ yarn-like squiggle lines threading between elements.
 - Canvas vs SVG for grid rendering.
 - Component structure and file layout.
 - Whether k-means runs in Lab or RGB.
+
+## Update 2026-11-15: editing, full-screen crochet mode, bigger patterns
+
+Requested after the first build:
+- Hand corrections: paint stitches with a chosen palette colour (tap/drag), change a colour's shade,
+  add a colour, "replace with…" (all stitches of one colour become another), delete rows, undo (in memory, 40 steps).
+  Changing width/colours after hand edits warns that edits will be lost.
+- Crochet mode is a full-screen view (covers the site chrome) with an optional browser full-screen button.
+- Limits raised: stitches wide 10–300 (was 150), rows cap 500 (was 300). ("max pixels" read as "allow bigger patterns".)
+- Studio layout: wider page; settings + colours on the left, preview in the middle, "row by row" in its own right column (≥1280px).

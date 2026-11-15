@@ -12,7 +12,7 @@ import { useProject } from "@/store/project";
 type Change = { kind: "cols" | "colors"; value: number };
 
 export function SettingsPanel() {
-  const { image, cols, colors, progress, gridCols, handedness, setCols, setColors } = useProject();
+  const { image, cols, colors, progress, gridCols, handedness, edited, setCols, setColors } = useProject();
   const [draftCols, setDraftCols] = useState(cols);
   const [text, setText] = useState(String(cols));
   const [pending, setPending] = useState<Change | null>(null);
@@ -22,7 +22,7 @@ export function SettingsPanel() {
   const apply = (c: Change) => (c.kind === "cols" ? setCols(c.value) : setColors(c.value));
   const request = (c: Change) => {
     if (c.kind === "cols" && c.value === cols) return;
-    if (hasProgress(progress, gridCols, handedness)) setPending(c);
+    if (edited || hasProgress(progress, gridCols, handedness)) setPending(c);
     else apply(c);
   };
   const showCols = (v: number) => {
@@ -119,9 +119,15 @@ export function SettingsPanel() {
         <ConfirmDialog
           open
           title="start the pattern over?"
-          message={`You're on row ${progress.row}, stitch ${stitchNumber(progress, gridCols, handedness)}. Changing the ${
-            pending.kind === "cols" ? "width" : "colours"
-          } makes a new grid and resets your place.`}
+          message={[
+            `Changing the ${pending.kind === "cols" ? "width" : "colours"} redraws the grid from your picture.`,
+            edited ? "Your hand edits will be lost." : "",
+            hasProgress(progress, gridCols, handedness)
+              ? `Your place (row ${progress.row}, stitch ${stitchNumber(progress, gridCols, handedness)}) resets.`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           confirmLabel="change it"
           onConfirm={() => {
             apply(pending);
