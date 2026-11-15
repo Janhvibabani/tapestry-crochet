@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { isDark, rgbCss } from "@/lib/color";
+import { rowDim } from "@/lib/dim";
 import type { Position } from "@/lib/progress";
 import type { Grid, PaletteColor } from "@/lib/types";
 
@@ -11,6 +12,8 @@ interface Props {
   cellSize: number;
   /** Pattern row (1 = bottom) to outline; rows below it are faded as done. */
   highlightRow?: number;
+  /** Focus mode: dim the whole tapestry except the highlighted row. */
+  focus?: boolean;
   current?: Position;
   onCellClick?(p: Position): void;
   /** Paint mode: called once when a stroke starts, then for every stitch the pointer crosses. */
@@ -32,7 +35,7 @@ export function gutterWidth(showRowNumbers: boolean | undefined) {
 /** Smallest cell size that can carry a readable number. */
 export const MIN_NUMBERED_CELL = 14;
 
-export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onCellClick, onPaintStart, onPaint, showRowNumbers, numbers, label }: Props) {
+export function StitchGrid({ grid, palette, cellSize, highlightRow, focus = false, current, onCellClick, onPaintStart, onPaint, showRowNumbers, numbers, label }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
   const rows = grid.length;
@@ -93,9 +96,12 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onC
 
     if (highlightRow) {
       const yTop = oy + (rows - highlightRow) * cellSize;
-      // fade finished rows (everything below the current row)
-      ctx.fillStyle = "rgba(251,245,233,0.62)";
-      ctx.fillRect(ox, yTop + cellSize, cols * cellSize, (highlightRow - 1) * cellSize);
+      for (let row = 1; row <= rows; row++) {
+        const a = rowDim(row, highlightRow, focus);
+        if (a === 0) continue;
+        ctx.fillStyle = `rgba(251,245,233,${a})`;
+        ctx.fillRect(ox, oy + (rows - row) * cellSize, cols * cellSize, cellSize);
+      }
       ctx.strokeStyle = INK;
       ctx.lineWidth = 2.5;
       ctx.strokeRect(ox - 1, yTop - 1, cols * cellSize + 2, cellSize + 2);
@@ -127,7 +133,7 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onC
       }
       ctx.globalAlpha = 1;
     }
-  }, [grid, palette, cellSize, highlightRow, current, rows, cols, gutter, width, height, showRowNumbers, numbers]);
+  }, [grid, palette, cellSize, highlightRow, current, rows, cols, gutter, width, height, showRowNumbers, numbers, focus]);
 
   const cellAt = (e: React.PointerEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>): Position | null => {
     const r = e.currentTarget.getBoundingClientRect();

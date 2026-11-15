@@ -209,3 +209,6 @@ Requested after the first build:
 - Optional **stitch numbers** (per device): each stitch shows its position within its colour run, counted in that
   row's working direction (so it follows handedness) and restarting at 1 on every colour change. Shown on the grid when
   stitches are ≥14px (turning numbers on zooms in if needed); always shown in focus mode.
+
+Correction (user): **focus mode** means the whole tapestry stays visible but goes dimmer, and only the current row stays
+bright (no separate big-row view). Normal mode keeps fading only finished rows.

@@ -5,8 +5,12 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CrochetControls } from "@/components/crochet/CrochetControls";
 import { RowFocus } from "@/components/crochet/RowFocus";
 import { Star } from "@/components/doodles/Doodles";
-import { FocusRow } from "@/components/crochet/FocusRow";
-import { gutterWidth, MIN_NUMBERED_CELL, StitchGrid, useFitCellSize } from "@/components/grid/StitchGrid";
+import {
+  gutterWidth,
+  MIN_NUMBERED_CELL,
+  StitchGrid,
+  useFitCellSize,
+} from "@/components/grid/StitchGrid";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { HandednessToggle } from "@/components/ui/HandednessToggle";
@@ -42,14 +46,25 @@ function useFullscreen() {
 
 export default function CrochetPage() {
   const hydrated = useHydrated();
-  const { grid, palette, progress, rows, gridCols, handedness, setProgress } = useProject();
+  const { grid, palette, progress, rows, gridCols, handedness, setProgress } =
+    useProject();
   const boxRef = useRef<HTMLDivElement>(null);
-  const fit = useFitCellSize(boxRef, gridCols, gutterWidth(true), MIN, 36, rows);
+  const fit = useFitCellSize(
+    boxRef,
+    gridCols,
+    gutterWidth(true),
+    MIN,
+    36,
+    rows,
+  );
   const [zoom, setZoom] = useState<number | null>(null);
   const cellSize = zoom ?? fit;
   const fs = useFullscreen();
   const [focus, setFocus] = usePref("tapestry-focus-mode", false);
-  const [showNumbers, setShowNumbers] = usePref("tapestry-stitch-numbers", false);
+  const [showNumbers, setShowNumbers] = usePref(
+    "tapestry-stitch-numbers",
+    false,
+  );
 
   // The page behind this full-screen view shouldn't scroll.
   useEffect(() => {
@@ -67,8 +82,12 @@ export default function CrochetPage() {
     if (!box || !grid) return;
     const x = gutterWidth(true) + 4 + progress.col * cellSize;
     const y = 4 + (rows - progress.row) * cellSize;
-    box.scrollTo({ left: Math.max(0, x - box.clientWidth / 2), top: Math.max(0, y - box.clientHeight / 2), behavior: "smooth" });
-  }, [progress, cellSize, rows, grid, focus]);
+    box.scrollTo({
+      left: Math.max(0, x - box.clientWidth / 2),
+      top: Math.max(0, y - box.clientHeight / 2),
+      behavior: "smooth",
+    });
+  }, [progress, cellSize, rows, grid]);
 
   if (!hydrated) return null;
   if (!grid) return <EmptyState />;
@@ -81,44 +100,79 @@ export default function CrochetPage() {
   const tooSmallForNumbers = showNumbers && cellSize < MIN_NUMBERED_CELL;
 
   return (
-    <div className="dotted fixed inset-0 z-50 bg-cream flex flex-col overflow-hidden" role="dialog" aria-label="Crochet mode">
+    <div
+      className="dotted fixed inset-0 z-50 bg-cream flex flex-col overflow-hidden"
+      role="dialog"
+      aria-label="Crochet mode"
+    >
       {/* top bar */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b-[2.5px] border-ink bg-lilac px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-5">
         <p className="flex min-w-0 items-center gap-2 font-display text-xl sm:text-2xl">
-          <Star className="h-6 w-6 shrink-0" /> <span className="hidden sm:inline">crochet mode</span>
+          <Star className="hidden h-6 w-6 shrink-0 sm:block" />{" "}
+          <span className="hidden sm:inline">crochet mode</span>
         </p>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Button tone={focus ? "butter" : "paper"} size="sm" aria-pressed={focus} aria-label="focus mode" onClick={() => setFocus(!focus)}>
+          <Button
+            tone={focus ? "butter" : "paper"}
+            size="sm"
+
+            aria-pressed={focus}
+            aria-label="focus mode"
+            onClick={() => setFocus(!focus)}
+          >
             <span aria-hidden>◎</span>
             <span className="hidden sm:inline">focus</span>
           </Button>
-          {!focus && (
-            <>
-              <Button
-                tone={showNumbers ? "butter" : "paper"}
-                size="sm"
-                aria-pressed={showNumbers}
-                aria-label="stitch numbers"
-                title="number each stitch within its colour, counted the way you work the row"
-                onClick={() => {
-                  setShowNumbers(!showNumbers);
-                  if (!showNumbers && cellSize < MIN_NUMBERED_CELL) setZoom(MIN_NUMBERED_CELL + 4);
-                }}
-              >
-                123
-              </Button>
-              <Button tone="paper" size="sm" aria-label="zoom out" disabled={cellSize <= MIN} onClick={() => setZoom(Math.max(MIN, cellSize - 3))}>
-                −
-              </Button>
-              <Button tone="paper" size="sm" aria-label="zoom in" disabled={cellSize >= MAX} onClick={() => setZoom(Math.min(MAX, cellSize + 3))}>
-                +
-              </Button>
-            </>
-          )}
+          <Button
+            tone={showNumbers ? "butter" : "paper"}
+            size="sm"
+
+            aria-pressed={showNumbers}
+            aria-label="stitch numbers"
+            title="number each stitch within its colour, counted the way you work the row"
+            onClick={() => {
+              setShowNumbers(!showNumbers);
+              if (!showNumbers && cellSize < MIN_NUMBERED_CELL)
+                setZoom(MIN_NUMBERED_CELL + 4);
+            }}
+          >
+            123
+          </Button>
+          <Button
+            tone="paper"
+            size="sm"
+
+            aria-label="zoom out"
+            disabled={cellSize <= MIN}
+            onClick={() => setZoom(Math.max(MIN, cellSize - 3))}
+          >
+            −
+          </Button>
+          <Button
+            tone="paper"
+            size="sm"
+
+            aria-label="zoom in"
+            disabled={cellSize >= MAX}
+            onClick={() => setZoom(Math.min(MAX, cellSize + 3))}
+          >
+            +
+          </Button>
           {fs.supported && (
-            <Button tone="paper" size="sm" onClick={fs.toggle} aria-pressed={fs.isFull} aria-label={fs.isFull ? "exit full screen" : "full screen"}>
-              <span aria-hidden className="sm:hidden">{fs.isFull ? "⤡" : "⤢"}</span>
-              <span className="hidden sm:inline">{fs.isFull ? "exit full screen" : "full screen"}</span>
+            <Button
+              tone="paper"
+              size="sm"
+
+              onClick={fs.toggle}
+              aria-pressed={fs.isFull}
+              aria-label={fs.isFull ? "exit full screen" : "full screen"}
+            >
+              <span aria-hidden className="sm:hidden">
+                {fs.isFull ? "⤡" : "⤢"}
+              </span>
+              <span className="hidden sm:inline">
+                {fs.isFull ? "exit full screen" : "full screen"}
+              </span>
             </Button>
           )}
           <Link
@@ -131,65 +185,65 @@ export default function CrochetPage() {
         </div>
       </div>
 
-      {focus ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:py-6">
-              <RowFocus row={row} stitch={stitch} rows={rows} cols={gridCols} palette={palette} />
-              <FocusRow grid={grid} palette={palette} numbers={numbers} progress={progress} handedness={handedness} onPick={setProgress} />
-              <p className="text-base text-ink-soft">
-                Numbers count each colour run the way you work the row and start again at 1 when the colour changes.
-              </p>
-              <div className="hidden lg:block lg:max-w-md">
-                <CrochetControls />
-              </div>
-            </div>
-          </div>
-          <div className="shrink-0 border-t-[2.5px] border-ink bg-cream px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
-            <CrochetControls />
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* where you are (phones: top) */}
+        <div className="shrink-0 border-b-2 border-dashed border-ink/30 px-4 py-3 lg:hidden">
+          <RowFocus
+            row={row}
+            stitch={stitch}
+            rows={rows}
+            cols={gridCols}
+            palette={palette}
+          />
         </div>
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          {/* where you are (phones: top) */}
-          <div className="shrink-0 border-b-2 border-dashed border-ink/30 px-4 py-3 lg:hidden">
-            <RowFocus row={row} stitch={stitch} rows={rows} cols={gridCols} palette={palette} />
-          </div>
 
-          {/* the grid fills whatever space is left */}
-          <div ref={boxRef} className="plaid relative min-h-0 flex-1 overflow-auto p-2">
-            {tooSmallForNumbers && (
-              <p className="paper sticky left-0 top-0 z-10 mb-2 w-max bg-butter px-3 py-1 text-base">zoom in (+) to see the stitch numbers</p>
-            )}
-            <StitchGrid
-              grid={grid}
-              palette={palette}
-              cellSize={cellSize}
-              highlightRow={progress.row}
-              current={progress}
-              onCellClick={setProgress}
-              showRowNumbers
-              numbers={showNumbers ? numbers : undefined}
-              label={`Stitch grid. You are on row ${progress.row}, stitch ${stitch}.`}
-            />
-          </div>
-
-          {/* desktop side panel */}
-          <aside className="hidden w-[25rem] shrink-0 flex-col gap-5 overflow-y-auto border-l-[2.5px] border-ink bg-paper/90 p-5 lg:flex">
-            <RowFocus row={row} stitch={stitch} rows={rows} cols={gridCols} palette={palette} />
-            <CrochetControls />
-            <HandednessToggle />
-            <p className="text-base text-ink-soft">
-              Tap a stitch on the grid to jump there. Faded rows are done. Turn on 123 to number each stitch within its colour.
+        {/* the grid fills whatever space is left */}
+        <div
+          ref={boxRef}
+          className="plaid relative min-h-0 flex-1 overflow-auto p-2"
+        >
+          {tooSmallForNumbers && (
+            <p className="paper sticky left-0 top-0 z-10 mb-2 w-max bg-butter px-3 py-1 text-base">
+              zoom in (+) to see the stitch numbers
             </p>
-          </aside>
-
-          {/* phone controls, under your thumb */}
-          <div className="shrink-0 border-t-[2.5px] border-ink bg-cream px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
-            <CrochetControls />
-          </div>
+          )}
+          <StitchGrid
+            grid={grid}
+            palette={palette}
+            cellSize={cellSize}
+            highlightRow={progress.row}
+            focus={focus}
+            current={progress}
+            onCellClick={setProgress}
+            showRowNumbers
+            numbers={showNumbers ? numbers : undefined}
+            label={`Stitch grid. You are on row ${progress.row}, stitch ${stitch}.`}
+          />
         </div>
-      )}
+
+        {/* desktop side panel */}
+        <aside className="hidden w-[25rem] shrink-0 flex-col gap-5 overflow-y-auto border-l-[2.5px] border-ink bg-paper/90 p-5 lg:flex">
+          <RowFocus
+            row={row}
+            stitch={stitch}
+            rows={rows}
+            cols={gridCols}
+            palette={palette}
+          />
+          <CrochetControls />
+          <HandednessToggle />
+          <p className="text-base text-ink-soft">
+            Tap a stitch on the grid to jump there. Faded rows are done. Focus
+            dims everything except the row you&apos;re on. 123 numbers each
+            stitch within its colour.
+          </p>
+        </aside>
+
+        {/* phone controls, under your thumb */}
+        <div className="shrink-0 border-t-[2.5px] border-ink bg-cream px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
+          <CrochetControls />
+        </div>
+      </div>
     </div>
   );
 }
