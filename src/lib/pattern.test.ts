@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPattern, colorTotals, gridRow, rowDirection } from "./pattern";
+import { buildPattern, colorTotals, gridRow, rowDirection, runAt } from "./pattern";
 import type { Grid } from "./types";
 
 // top row, then bottom row
@@ -45,5 +45,18 @@ describe("buildPattern", () => {
 describe("colorTotals", () => {
   it("counts stitches per colour", () => {
     expect(colorTotals(grid, 3)).toEqual([2, 3, 1]);
+  });
+});
+
+describe("runAt", () => {
+  const runs = [
+    { color: 1, count: 2 },
+    { color: 2, count: 3 },
+  ];
+  it("finds the run and position inside it for a stitch number", () => {
+    expect(runAt(runs, 1)).toEqual({ index: 0, within: 1 });
+    expect(runAt(runs, 2)).toEqual({ index: 0, within: 2 });
+    expect(runAt(runs, 3)).toEqual({ index: 1, within: 1 });
+    expect(runAt(runs, 5)).toEqual({ index: 1, within: 3 });
   });
 });

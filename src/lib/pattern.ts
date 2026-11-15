@@ -47,3 +47,14 @@ export function colorTotals(grid: Grid, paletteSize: number): number[] {
   for (const row of grid) for (const c of row) totals[c]++;
   return totals;
 }
+
+/** Which run a 1-based stitch number falls in, and its 1-based position within that run. */
+export function runAt(runs: Run[], stitch: number): { index: number; within: number } {
+  let left = stitch;
+  for (let i = 0; i < runs.length; i++) {
+    if (left <= runs[i].count) return { index: i, within: left };
+    left -= runs[i].count;
+  }
+  const last = runs.length - 1;
+  return { index: last, within: runs[last]?.count ?? 0 };
+}
