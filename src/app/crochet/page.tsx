@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CrochetControls } from "@/components/crochet/CrochetControls";
 import { RowFocus } from "@/components/crochet/RowFocus";
 import { Star } from "@/components/doodles/Doodles";
@@ -16,11 +16,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { HandednessToggle } from "@/components/ui/HandednessToggle";
 import { buildPattern, runPositions } from "@/lib/pattern";
 import { usePref } from "@/lib/usePref";
+import { usePinchZoom } from "@/components/grid/usePinchZoom";
 import { stitchNumber } from "@/lib/progress";
 import { useHydrated, useProject } from "@/store/project";
 
-const MIN = 4;
-const MAX = 48;
+const MIN = 2;
+const MAX = 80;
+const STEP = 1.25;
 
 /** Browser full screen (not available on iPhone Safari, where the page itself already fills the screen). */
 function useFullscreen() {
@@ -59,6 +61,15 @@ export default function CrochetPage() {
   );
   const [zoom, setZoom] = useState<number | null>(null);
   const cellSize = zoom ?? fit;
+  const zoomAt = usePinchZoom({
+    boxRef,
+    size: cellSize,
+    setSize: setZoom,
+    min: MIN,
+    max: MAX,
+    gutter: gutterWidth(true),
+    ready: hydrated && grid !== null,
+  });
   const fs = useFullscreen();
   const [focus, setFocus] = usePref("tapestry-focus-mode", false);
   const [showNumbers, setShowNumbers] = usePref(
@@ -76,18 +87,31 @@ export default function CrochetPage() {
     };
   }, []);
 
-  // Keep the current stitch in view.
+  // Keep the current stitch in view when it changes (or when the grid is first fitted),
+  // but not on zoom steps: pinching keeps the spot under your fingers instead.
+  const sizeRef = useRef(cellSize);
   useEffect(() => {
+    sizeRef.current = cellSize;
+  }, [cellSize]);
+  const scrollToCurrent = useCallback(() => {
     const box = boxRef.current;
-    if (!box || !grid) return;
-    const x = gutterWidth(true) + 4 + progress.col * cellSize;
-    const y = 4 + (rows - progress.row) * cellSize;
+    if (!box) return;
+    const size = sizeRef.current;
+    const x = gutterWidth(true) + 4 + progress.col * size;
+    const y = 4 + (rows - progress.row) * size;
     box.scrollTo({
       left: Math.max(0, x - box.clientWidth / 2),
       top: Math.max(0, y - box.clientHeight / 2),
       behavior: "smooth",
     });
-  }, [progress, cellSize, rows, grid]);
+  }, [progress, rows]);
+  useEffect(() => {
+    if (grid) scrollToCurrent();
+  }, [scrollToCurrent, grid]);
+  useEffect(() => {
+    if (zoom === null) scrollToCurrent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fit]);
 
   if (!hydrated) return null;
   if (!grid) return <EmptyState />;
@@ -133,7 +157,7 @@ export default function CrochetPage() {
             onClick={() => {
               setShowNumbers(!showNumbers);
               if (!showNumbers && cellSize < MIN_NUMBERED_CELL)
-                setZoom(MIN_NUMBERED_CELL + 4);
+                zoomAt(MIN_NUMBERED_CELL + 4);
             }}
           >
             123
@@ -144,7 +168,7 @@ export default function CrochetPage() {
 
             aria-label="zoom out"
             disabled={cellSize <= MIN}
-            onClick={() => setZoom(Math.max(MIN, cellSize - 3))}
+            onClick={() => zoomAt(cellSize / STEP)}
           >
             −
           </Button>
@@ -154,7 +178,7 @@ export default function CrochetPage() {
 
             aria-label="zoom in"
             disabled={cellSize >= MAX}
-            onClick={() => setZoom(Math.min(MAX, cellSize + 3))}
+            onClick={() => zoomAt(cellSize * STEP)}
           >
             +
           </Button>
@@ -201,6 +225,8 @@ export default function CrochetPage() {
         <div
           ref={boxRef}
           className="plaid relative min-h-0 flex-1 overflow-auto p-2"
+          // one finger scrolls; two-finger pinch is handled by usePinchZoom
+          style={{ touchAction: "pan-x pan-y" }}
         >
           {tooSmallForNumbers && (
             <p className="paper sticky left-0 top-0 z-10 mb-2 w-max bg-butter px-3 py-1 text-base">

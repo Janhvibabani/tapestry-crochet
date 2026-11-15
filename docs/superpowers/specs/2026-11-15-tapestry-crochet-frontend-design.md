@@ -224,3 +224,11 @@ bright (no separate big-row view). Normal mode keeps fading only finished rows.
 - Landing page: "start with a blank canvas" (10–300 wide, 1–500 rows, all white) → opens the editor.
   Blank projects (`source: "blank"`) hide the picture-only width/colour controls in the studio.
 - Favicon: yellow star.
+
+## Update 4: freehand zoom in crochet mode
+
+- Crochet mode zooms freely: two-finger pinch (touch), trackpad pinch / Ctrl or ⌘ + wheel (desktop), Safari gesture
+  events. The stitch under the fingers/pointer stays put. Stitch size 2–80px; −/+ buttons step ×1.25 around the centre.
+  One finger still scrolls; the page itself never zooms.
+- The grid now draws only the visible area (canvas sized to the viewport, inside a full-size spacer), so deep zoom
+  works on any tapestry size without hitting browser canvas limits. Row numbers stay pinned on the left edge.
