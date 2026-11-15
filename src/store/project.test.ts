@@ -35,8 +35,8 @@ describe("project store", () => {
   });
 
   it("clamps the width to the allowed range", () => {
-    useProject.getState().setCols(500);
-    expect(useProject.getState().cols).toBe(150);
+    useProject.getState().setCols(900);
+    expect(useProject.getState().cols).toBe(300);
   });
 
   it("keeps progress when handedness changes", () => {
@@ -90,5 +90,56 @@ describe("loading saved data", () => {
     const st = useProject.getState();
     expect([st.rows, st.gridCols]).toEqual([3, 2]);
     expect(st.progress).toEqual({ row: 3, col: 1 });
+  });
+});
+
+describe("editing", () => {
+  const fresh = () => {
+    const s = useProject.getState();
+    s.setHandedness("right");
+    s.setCols(10);
+    s.setColors(2);
+    s.setImage(twoColourImage(20, 20));
+    return useProject.getState();
+  };
+
+  it("paints stitches and can undo the whole stroke", () => {
+    const before = fresh().grid!;
+    const other = 1 - before[before.length - 1][0]; // the colour the stitch isn't
+    useProject.getState().beginEdit();
+    useProject.getState().paint({ row: 1, col: 0 }, other);
+    useProject.getState().paint({ row: 1, col: 1 }, other);
+    const st = useProject.getState();
+    expect(st.grid![st.rows - 1].slice(0, 2)).toEqual([other, other]);
+    expect(st.edited).toBe(true);
+    st.undo();
+    expect(useProject.getState().grid).toEqual(before);
+    expect(useProject.getState().canUndo).toBe(false);
+  });
+
+  it("deletes a row and keeps your place on the same stitch", () => {
+    const st = fresh();
+    st.setProgress({ row: 5, col: 3 });
+    useProject.getState().deleteRow(2);
+    const after = useProject.getState();
+    expect(after.rows).toBe(st.rows - 1);
+    expect(after.grid).toHaveLength(st.rows - 1);
+    expect(after.progress).toEqual({ row: 4, col: 3 });
+  });
+
+  it("recolours and adds colours", () => {
+    fresh();
+    useProject.getState().recolor(0, [1, 2, 3]);
+    expect(useProject.getState().palette[0].rgb).toEqual([1, 2, 3]);
+    useProject.getState().addColor([9, 9, 9]);
+    expect(useProject.getState().palette).toHaveLength(3);
+  });
+
+  it("never saves the undo history", () => {
+    fresh();
+    useProject.getState().deleteRow(1);
+    const partial = useProject.persist.getOptions().partialize!(useProject.getState());
+    expect(partial).not.toHaveProperty("history");
+    expect(partial).toHaveProperty("edited", true);
   });
 });

@@ -21,8 +21,8 @@ describe("gridSize", () => {
     expect(gridSize(100, 100, 40)).toEqual({ cols: 40, rows: 40 });
   });
 
-  it("caps rows at 300", () => {
-    expect(gridSize(100, 2000, 150)).toEqual({ cols: 15, rows: 300 });
+  it("caps rows at 500", () => {
+    expect(gridSize(100, 2000, 300)).toEqual({ cols: 25, rows: 500 });
   });
 });
 

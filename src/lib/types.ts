@@ -12,12 +12,12 @@ export type Grid = number[][];
 
 export const LIMITS = {
   colsMin: 10,
-  colsMax: 150,
+  colsMax: 300,
   colsDefault: 40,
   colorsMin: 2,
   colorsMax: 12,
   colorsDefault: 6,
-  rowsMax: 300,
+  rowsMax: 500,
 } as const;
 
 export function defaultColorName(i: number): string {

@@ -10,6 +10,7 @@ export interface SavedProject {
   gridCols: number;
   rows: number;
   progress: Position;
+  edited: boolean;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
@@ -48,6 +49,7 @@ export function sanitizeSaved(raw: unknown): SavedProject {
     cols: clampInt(r.cols, LIMITS.colsMin, LIMITS.colsMax, LIMITS.colsDefault),
     colors: clampInt(r.colors, LIMITS.colorsMin, LIMITS.colorsMax, LIMITS.colorsDefault),
     handedness,
+    edited: r.edited === true,
   };
   const palette = validPalette(r.palette) ? r.palette : null;
   if (!palette || !validGrid(r.grid, palette.length)) {
