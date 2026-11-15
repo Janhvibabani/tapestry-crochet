@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { CrochetControls } from "@/components/crochet/CrochetControls";
 import { RowFocus } from "@/components/crochet/RowFocus";
 import { Star } from "@/components/doodles/Doodles";
@@ -51,6 +57,7 @@ export default function CrochetPage() {
   const { grid, palette, progress, rows, gridCols, handedness, setProgress } =
     useProject();
   const boxRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const fit = useFitCellSize(
     boxRef,
     gridCols,
@@ -69,6 +76,7 @@ export default function CrochetPage() {
     max: MAX,
     gutter: gutterWidth(true),
     ready: hydrated && grid !== null,
+    captureRef: rootRef,
   });
   const fs = useFullscreen();
   const [focus, setFocus] = usePref("tapestry-focus-mode", false);
@@ -125,7 +133,10 @@ export default function CrochetPage() {
 
   return (
     <div
+      ref={rootRef}
       className="dotted fixed inset-0 z-50 bg-cream flex flex-col overflow-hidden"
+      // Pinching anywhere here zooms the stitch grid, never the page.
+      style={{ touchAction: "pan-x pan-y" }}
       role="dialog"
       aria-label="Crochet mode"
     >

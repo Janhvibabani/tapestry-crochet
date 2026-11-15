@@ -232,3 +232,7 @@ bright (no separate big-row view). Normal mode keeps fading only finished rows.
   One finger still scrolls; the page itself never zooms.
 - The grid now draws only the visible area (canvas sized to the viewport, inside a full-size spacer), so deep zoom
   works on any tapestry size without hitting browser canvas limits. Row numbers stay pinned on the left edge.
+
+Correction (user): zooming must change only the stitch-grid panel, never the whole page. In crochet mode a pinch
+anywhere on screen zooms the grid (the overlay is `touch-action: pan-x pan-y` and catches pinches); the pattern
+page's preview panel has the same pinch/trackpad zoom plus − / + / fit buttons, and scrolls inside itself.

@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Star } from "@/components/doodles/Doodles";
 import {
   gutterWidth,
   StitchGrid,
   useFitCellSize,
 } from "@/components/grid/StitchGrid";
+import { usePinchZoom } from "@/components/grid/usePinchZoom";
 import { PalettePanel } from "@/components/studio/PalettePanel";
 import { PatternList } from "@/components/studio/PatternList";
 import { SettingsPanel } from "@/components/studio/SettingsPanel";
@@ -31,13 +32,18 @@ export default function StudioPage() {
     cols,
   } = useProject();
   const previewRef = useRef<HTMLDivElement>(null);
-  const cellSize = useFitCellSize(
-    previewRef,
-    gridCols,
-    gutterWidth(true),
-    3,
-    22,
-  );
+  const fit = useFitCellSize(previewRef, gridCols, gutterWidth(true), 2, 22);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const cellSize = zoom ?? fit;
+  const zoomAt = usePinchZoom({
+    boxRef: previewRef,
+    size: cellSize,
+    setSize: setZoom,
+    min: 2,
+    max: 60,
+    gutter: gutterWidth(true),
+    ready: hydrated && grid !== null,
+  });
 
   if (!hydrated) return null;
   if (!grid) return <EmptyState />;
@@ -82,7 +88,38 @@ export default function StudioPage() {
             </div>
           </div>
 
-          <div ref={previewRef} className="plaid paper overflow-auto p-2">
+          <div className="mb-2 flex items-center justify-end gap-2">
+            <span className="mr-auto text-sm text-ink-soft">
+              pinch or Ctrl/⌘ + scroll to zoom
+            </span>
+            <Button
+              tone="paper"
+              size="sm"
+              aria-label="zoom out"
+              onClick={() => zoomAt(cellSize / 1.25)}
+            >
+              −
+            </Button>
+            <Button
+              tone="paper"
+              size="sm"
+              aria-label="zoom in"
+              onClick={() => zoomAt(cellSize * 1.25)}
+            >
+              +
+            </Button>
+            {zoom !== null && (
+              <Button tone="paper" size="sm" onClick={() => setZoom(null)}>
+                fit
+              </Button>
+            )}
+          </div>
+          <div
+            ref={previewRef}
+            className="plaid paper max-h-[75vh] overflow-auto p-2"
+            // Pinching here zooms the stitch grid, not the page.
+            style={{ touchAction: "pan-x pan-y" }}
+          >
             <StitchGrid
               grid={grid}
               palette={palette}

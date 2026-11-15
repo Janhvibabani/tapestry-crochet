@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type RefObject,
+} from "react";
 import { clampZoom, scrollAfterZoom } from "@/lib/zoom";
 import { GRID_PAD } from "./StitchGrid";
 
@@ -15,16 +21,38 @@ interface Options {
   gutter: number;
   /** False until the scroll box is on the page (listeners attach when it turns true). */
   ready: boolean;
+  /**
+   * Where pinches are caught (defaults to the scroll box). A pinch anywhere inside it zooms
+   * the grid instead of the page; give this element `touch-action: pan-x pan-y`.
+   */
+  captureRef?: RefObject<HTMLElement | null>;
 }
 
-type Pending = { px: number; py: number; ox: number; oy: number; old: number; sl: number; st: number };
+type Pending = {
+  px: number;
+  py: number;
+  ox: number;
+  oy: number;
+  old: number;
+  sl: number;
+  st: number;
+};
 
 /**
  * Freehand zoom for the stitch grid: two-finger pinch on touch screens, trackpad pinch
  * (and Ctrl/⌘ + scroll) on computers. The stitch under your fingers stays put.
  * Returns `zoomAt(size, clientX?, clientY?)` for buttons (anchors at the box centre).
  */
-export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }: Options) {
+export function usePinchZoom({
+  boxRef,
+  size,
+  setSize,
+  min,
+  max,
+  gutter,
+  ready,
+  captureRef,
+}: Options) {
   const committed = useRef(size); // size the current layout was drawn with
   const latest = useRef(size); // last size we asked for
   const pending = useRef<Pending | null>(null);
@@ -40,8 +68,15 @@ export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }:
       const s = spacer.getBoundingClientRect();
       const left = b.left + box.clientLeft;
       const top = b.top + box.clientTop;
-      const px = (clientX ?? left + box.clientWidth / 2) - left;
-      const py = (clientY ?? top + box.clientHeight / 2) - top;
+      // Pinches outside the grid panel anchor at its nearest edge.
+      const px = Math.min(
+        box.clientWidth,
+        Math.max(0, (clientX ?? left + box.clientWidth / 2) - left),
+      );
+      const py = Math.min(
+        box.clientHeight,
+        Math.max(0, (clientY ?? top + box.clientHeight / 2) - top),
+      );
       if (!pending.current) {
         pending.current = {
           px,
@@ -69,13 +104,25 @@ export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }:
     committed.current = size;
     latest.current = size;
     if (!box || !p) return;
-    box.scrollLeft = scrollAfterZoom({ scroll: p.sl, point: p.px, origin: p.ox, oldSize: p.old, newSize: size });
-    box.scrollTop = scrollAfterZoom({ scroll: p.st, point: p.py, origin: p.oy, oldSize: p.old, newSize: size });
+    box.scrollLeft = scrollAfterZoom({
+      scroll: p.sl,
+      point: p.px,
+      origin: p.ox,
+      oldSize: p.old,
+      newSize: size,
+    });
+    box.scrollTop = scrollAfterZoom({
+      scroll: p.st,
+      point: p.py,
+      origin: p.oy,
+      oldSize: p.old,
+      newSize: size,
+    });
     pending.current = null;
   }, [size, boxRef]);
 
   useEffect(() => {
-    const box = boxRef.current;
+    const box = captureRef?.current ?? boxRef.current;
     if (!box || !ready) return;
 
     // Trackpad pinch arrives as a wheel event with ctrlKey; Ctrl/⌘ + mouse wheel zooms too.
@@ -89,9 +136,11 @@ export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }:
 
     // Two-finger pinch.
     let start: { dist: number; size: number } | null = null;
-    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const dist = (t: TouchList) =>
+      Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) start = { dist: dist(e.touches), size: latest.current };
+      if (e.touches.length === 2)
+        start = { dist: dist(e.touches), size: latest.current };
     };
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 2 || !start) return;
@@ -105,7 +154,11 @@ export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }:
     };
 
     // Safari on Mac reports trackpad pinch as gesture events.
-    type GestureEvt = Event & { scale: number; clientX: number; clientY: number };
+    type GestureEvt = Event & {
+      scale: number;
+      clientX: number;
+      clientY: number;
+    };
     let gestureStart = 0;
     const onGestureStart = (e: Event) => {
       e.preventDefault();
@@ -133,7 +186,7 @@ export function usePinchZoom({ boxRef, size, setSize, min, max, gutter, ready }:
       box.removeEventListener("gesturestart", onGestureStart);
       box.removeEventListener("gesturechange", onGestureChange);
     };
-  }, [boxRef, zoomAt, ready]);
+  }, [boxRef, captureRef, zoomAt, ready]);
 
   return zoomAt;
 }

@@ -46,7 +46,7 @@ export function PatternList({
       {rows.map((r) => (
         <li key={r.row} className="group flex items-start gap-1.5 border-b border-dashed border-ink/20 pb-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-            <span className="mr-1 w-20 shrink-0 font-display">
+            <span className="mr-1 w-24 shrink-0 whitespace-nowrap font-display">
               row {r.row} <DirectionArrow direction={r.direction} />
             </span>
             {r.runs.map((run, i) => (
