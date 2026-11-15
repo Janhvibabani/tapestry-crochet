@@ -17,7 +17,7 @@ export function Stamp({ tone = "blush", className = "", children }: { tone?: key
         <polygon points={pts.join(" ")} fill={fills[tone]} stroke="#5b3a29" strokeWidth="2.4" strokeLinejoin="round" />
         <circle cx="50" cy="50" r="34" fill="none" stroke="#5b3a29" strokeWidth="1.6" strokeDasharray="4 4" opacity=".5" />
       </svg>
-      <span className="relative px-4 text-center font-display leading-tight">{children}</span>
+      <span className="relative px-6 text-center font-display leading-tight">{children}</span>
     </span>
   );
 }
