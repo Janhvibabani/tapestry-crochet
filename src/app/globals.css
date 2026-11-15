@@ -1,26 +1,82 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-cream: #fbf5e9;
+  --color-paper: #fffaf0;
+  --color-ink: #5b3a29;
+  --color-ink-soft: #8a6a58;
+  --color-mint: #cfe8dc;
+  --color-lilac: #e3d3ee;
+  --color-butter: #f8edb5;
+  --color-peach: #f9d7c0;
+  --color-blue: #cfe2f3;
+  --color-blush: #f6cfd8;
+  --color-sage: #a9cba4;
+  --font-display: var(--font-cherry), ui-rounded, system-ui, sans-serif;
+  --font-hand: var(--font-patrick), ui-rounded, system-ui, sans-serif;
+  --radius-wobble: 14px 5px 12px 6px / 6px 12px 5px 14px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-ink);
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  line-height: 1.45;
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(circle, #f2dfc9 1.6px, transparent 1.8px),
+    radial-gradient(circle, #e9e3f3 1.4px, transparent 1.6px);
+  background-size: 26px 26px, 26px 26px;
+  background-position: 0 0, 13px 13px;
+  overflow-x: hidden;
+}
+
+/* A dashed "stitch" focus ring, on theme and always visible. */
+:focus-visible {
+  outline: 2.5px dashed var(--color-ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Hand-drawn paper: wobbly ink outline + soft offset shadow. */
+.paper {
+  position: relative;
+  border: 2.5px solid var(--color-ink);
+  border-radius: var(--radius-wobble);
+  box-shadow: 4px 5px 0 rgb(91 58 41 / 0.16);
+}
+
+/* Inner running-stitch line. */
+.stitched::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 2px dashed rgb(91 58 41 / 0.35);
+  border-radius: 10px 4px 9px 5px / 5px 9px 4px 10px;
+  pointer-events: none;
+}
+
+.plaid {
+  background-color: #eef4ec;
+  background-image:
+    repeating-linear-gradient(0deg, rgb(246 207 216 / 0.55) 0 10px, transparent 10px 26px, rgb(207 226 243 / 0.6) 26px 32px, transparent 32px 48px),
+    repeating-linear-gradient(90deg, rgb(248 237 181 / 0.65) 0 10px, transparent 10px 26px, rgb(169 203 164 / 0.5) 26px 32px, transparent 32px 48px);
+}
+
+.font-display {
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
