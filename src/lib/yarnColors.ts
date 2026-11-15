@@ -1,3 +1,4 @@
+import { nearest, rgbToLab } from "./kmeans";
 import type { RGB } from "./types";
 
 export interface YarnColor {
@@ -63,3 +64,19 @@ export const YARN_COLORS: YarnColor[] = [
   { name: "orchid", rgb: [180, 110, 190] },
   { name: "plum", rgb: [110, 50, 100] },
 ];
+
+const YARN_LABS = YARN_COLORS.map((c) => rgbToLab(c.rgb));
+
+/** The name of the yarn colour closest to `rgb` (perceptually, in Lab). */
+export function nearestYarnName(rgb: RGB): string {
+  return YARN_COLORS[nearest(YARN_LABS, rgbToLab(rgb))].name;
+}
+
+/** `name`, or `name 2`, `name 3`… if it's already taken. */
+export function uniqueName(name: string, taken: string[]): string {
+  const set = new Set(taken);
+  if (!set.has(name)) return name;
+  let n = 2;
+  while (set.has(`${name} ${n}`)) n++;
+  return `${name} ${n}`;
+}

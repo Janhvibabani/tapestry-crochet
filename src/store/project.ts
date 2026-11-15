@@ -4,11 +4,11 @@ import { create } from "zustand";
 import { persist, type StorageValue } from "zustand/middleware";
 import { useSyncExternalStore } from "react";
 import type { LoadedImage } from "@/lib/loadImage";
-import { mergeColors, renameColor } from "@/lib/palette";
+import { mergeColors } from "@/lib/palette";
 import { pixelate } from "@/lib/pixelate";
 import { sanitizeSaved } from "@/lib/saved";
 import { START, clampPosition, type Position } from "@/lib/progress";
-import { addColor, deleteRow, recolor, setStitch } from "@/lib/edit";
+import { addColor, blankGrid, deleteRow, dropUnused, ensureColor, findOther, floodFill, recolor, setStitch } from "@/lib/edit";
 import { LIMITS, type Grid, type Handedness, type PaletteColor, type RGB } from "@/lib/types";
 
 export interface ProjectState {
@@ -24,6 +24,8 @@ export interface ProjectState {
   gridCols: number;
   rows: number;
   progress: Position;
+  /** Where the grid came from: a pixelated picture or a blank canvas. */
+  source: "image" | "blank";
   /** True once the grid was changed by hand (paint, delete row, recolour…). */
   edited: boolean;
   /** Undo snapshots — in memory only. */
@@ -33,12 +35,17 @@ export interface ProjectState {
   setCols(n: number): void;
   setColors(n: number): void;
   setHandedness(h: Handedness): void;
-  rename(i: number, name: string): void;
   merge(from: number, into: number): void;
   setProgress(p: Position): void;
   /** Snapshot for undo; call once at the start of a paint stroke. */
   beginEdit(): void;
   paint(p: Position, color: number): void;
+  fill(p: Position, color: number): void;
+  /** Palette index for `rgb`, adding the colour if needed (no undo snapshot of its own). */
+  ensureColor(rgb: RGB, yarnName?: string): number;
+  /** Drop colours no stitch uses. */
+  tidyPalette(): void;
+  newBlank(cols: number, rows: number): void;
   deleteRow(row: number): void;
   recolor(i: number, rgb: RGB, yarnName?: string): void;
   addColor(rgb: RGB, yarnName?: string): void;
@@ -75,6 +82,7 @@ export const useProject = create<ProjectState>()(
           gridCols: cols,
           rows,
           progress: START(cols, next.handedness),
+          source: "image",
           edited: false,
           history: [],
           canUndo: false,
@@ -97,6 +105,7 @@ export const useProject = create<ProjectState>()(
         gridCols: 0,
         rows: 0,
         progress: { row: 1, col: 0 },
+        source: "image",
         edited: false,
         history: [],
         canUndo: false,
@@ -108,7 +117,6 @@ export const useProject = create<ProjectState>()(
         setCols: (n) => regenerate({ cols: clamp(n, LIMITS.colsMin, LIMITS.colsMax) }),
         setColors: (n) => regenerate({ colors: clamp(n, LIMITS.colorsMin, LIMITS.colorsMax) }),
         setHandedness: (handedness) => set({ handedness }),
-        rename: (i, name) => set({ palette: renameColor(get().palette, i, name) }),
         merge: (from, into) => {
           const { grid, palette } = get();
           if (!grid || from === into) return;
@@ -123,6 +131,42 @@ export const useProject = create<ProjectState>()(
           const next = setStitch(grid, p, color);
           if (next !== grid) set({ grid: next, edited: true });
         },
+        fill: (p, color) => {
+          const { grid } = get();
+          if (!grid) return;
+          const next = floodFill(grid, p, color);
+          if (next !== grid) set({ grid: next, edited: true });
+        },
+        ensureColor: (rgb, yarnName) => {
+          const out = ensureColor(get().palette, rgb, yarnName);
+          if (out.palette !== get().palette) set({ palette: out.palette });
+          return out.index;
+        },
+        tidyPalette: () => {
+          const { grid, palette } = get();
+          if (!grid) return;
+          const out = dropUnused(grid, palette);
+          if (out.palette !== palette) set(out);
+        },
+        newBlank: (cols, rows) => {
+          const c = clamp(cols, LIMITS.colsMin, LIMITS.colsMax);
+          const r = clamp(rows, 1, LIMITS.rowsMax);
+          const old = get().image;
+          if (old?.url.startsWith("blob:")) URL.revokeObjectURL(old.url);
+          set({
+            image: null,
+            source: "blank",
+            cols: c,
+            grid: blankGrid(c, r),
+            palette: [{ rgb: [255, 255, 255], name: "snow white" }],
+            gridCols: c,
+            rows: r,
+            progress: START(c, get().handedness),
+            edited: false,
+            history: [],
+            canUndo: false,
+          });
+        },
         deleteRow: (row) => {
           const { grid, progress, gridCols } = get();
           if (!grid) return;
@@ -133,8 +177,13 @@ export const useProject = create<ProjectState>()(
           set({ grid: next, rows: next.length, edited: true, progress: clampPosition(moved, next.length, gridCols) });
         },
         recolor: (i, rgb, yarnName) => {
+          const { grid, palette } = get();
+          if (!grid) return;
           snapshot();
-          set({ palette: recolor(get().palette, i, rgb, yarnName), edited: true });
+          // Picking a colour you already have joins the two.
+          const other = findOther(palette, i, rgb);
+          if (other >= 0) set({ ...mergeColors(grid, palette, i, other), edited: true });
+          else set({ palette: recolor(palette, i, rgb, yarnName), edited: true });
         },
         addColor: (rgb, yarnName) => {
           snapshot();

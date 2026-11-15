@@ -26,6 +26,8 @@ export function Dropzone() {
       const img = await loadImage(file);
       setImage(img);
       router.push("/studio");
+      // Pages stay mounted (hidden) after navigating, so reset for when you come back.
+      setBusy(false);
     } catch {
       setError("That file isn't a picture we can read. Try a JPG or PNG.");
       setBusy(false);

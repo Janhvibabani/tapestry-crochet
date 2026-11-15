@@ -7,78 +7,45 @@ import { rgbCss } from "@/lib/color";
 import { colorTotals } from "@/lib/pattern";
 import { useProject } from "@/store/project";
 
-const MAX_PALETTE = 20;
-
-/** Which colour the palette dialog is changing: an index, "new", or closed. */
-type Target = number | "new" | null;
-
 export function PalettePanel() {
-  const { grid, palette, rename, merge, recolor, addColor } = useProject();
-  const [target, setTarget] = useState<Target>(null);
+  const { grid, palette, recolor } = useProject();
+  const [target, setTarget] = useState<number | null>(null);
   if (!grid) return null;
   const totals = colorTotals(grid, palette.length);
-  const editing = typeof target === "number" ? palette[target] : undefined;
+  const editing = target !== null ? palette[target] : undefined;
 
   return (
     <PaperCard tone="paper" tilt={1} tape="mint" className="px-5 pb-5 pt-8">
       <h2 className="font-display text-2xl">yarn colours</h2>
-      <p className="text-base text-ink-soft">Tap a colour to swap it for any yarn colour. Rename colours after your yarn.</p>
-      <ul className="mt-3 space-y-3">
+      <p className="text-base text-ink-soft">Tap a colour to swap it for another one everywhere in your tapestry.</p>
+      <ul className="mt-3 space-y-2">
         {palette.map((p, i) => (
-          <li key={`${i}-${p.name}`} className="flex items-center gap-3">
+          <li key={`${i}-${p.name}`}>
             <button
               type="button"
               onClick={() => setTarget(i)}
-              aria-label={`change ${p.name} to another colour`}
-              className="paper h-11 w-11 shrink-0"
-              style={{ background: rgbCss(p.rgb) }}
-            />
-            <input
-              defaultValue={p.name}
-              aria-label={`name for ${p.name}`}
-              onBlur={(e) => {
-                if (!e.target.value.trim()) e.target.value = p.name;
-                rename(i, e.target.value);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-              className="min-h-11 min-w-0 flex-1 rounded-md border-b-2 border-dashed border-ink/30 bg-transparent px-1 hover:border-ink/60"
-            />
-            <span className="shrink-0 text-right tabular-nums text-ink-soft">{totals[i].toLocaleString()} sts</span>
+              aria-label={`replace ${p.name} everywhere with another colour`}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-1 py-1 text-left hover:bg-butter/60"
+            >
+              <span className="paper h-10 w-10 shrink-0" style={{ background: rgbCss(p.rgb) }} aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{p.name}</span>
+              <span className="shrink-0 tabular-nums text-ink-soft">{totals[i].toLocaleString()} sts</span>
+              <span aria-hidden className="shrink-0 text-ink-soft">✎</span>
+            </button>
           </li>
         ))}
       </ul>
-      {palette.length < MAX_PALETTE && (
-        <button
-          type="button"
-          onClick={() => setTarget("new")}
-          className="paper mt-4 inline-flex min-h-11 items-center gap-2 bg-butter px-4 text-lg"
-        >
-          + add a colour
-        </button>
-      )}
 
-      {target !== null && (
+      {editing && target !== null && (
         <ColorPaletteDialog
-          title={editing ? `change ${editing.name} to…` : "add a colour"}
-          current={editing?.rgb}
+          title={`replace ${editing.name} with…`}
+          hint={`All ${totals[target].toLocaleString()} ${editing.name} stitches change to the colour you pick.`}
+          current={editing.rgb}
           onClose={() => setTarget(null)}
           onPick={(rgb, name) => {
-            if (typeof target === "number") recolor(target, rgb, name);
-            else addColor(rgb, name);
+            recolor(target, rgb, name);
             setTarget(null);
           }}
-          own={
-            typeof target === "number"
-              ? {
-                  palette,
-                  exclude: target,
-                  onPick: (into) => {
-                    merge(target, into);
-                    setTarget(null);
-                  },
-                }
-              : undefined
-          }
         />
       )}
     </PaperCard>

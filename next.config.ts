@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The floating dev badge covers the phone toolbars in the editor and crochet mode.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

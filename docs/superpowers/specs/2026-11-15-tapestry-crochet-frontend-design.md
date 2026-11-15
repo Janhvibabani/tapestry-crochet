@@ -212,3 +212,15 @@ Requested after the first build:
 
 Correction (user): **focus mode** means the whole tapestry stays visible but goes dimmer, and only the current row stays
 bright (no separate big-row view). Normal mode keeps fading only finished rows.
+
+## Update 3: replace-everywhere colours, editor page, blank canvas
+
+- Tapping a colour replaces it everywhere with any colour (full yarn palette or custom). If the new colour is already
+  in the palette, the two are joined. The "merge into your colours" option is gone.
+- No renaming: colours are named automatically after the nearest yarn colour (Lab distance), made unique ("cream 2").
+- Editing moved to its own full-screen page `/edit`: tools brush, fill (4-way flood fill), eraser (paints white),
+  move (pan without painting); paint colour = any yarn/custom colour or one already used; undo; zoom. Strokes are
+  interpolated so fast drags leave no gaps. Colours no stitch uses are removed when leaving the editor.
+- Landing page: "start with a blank canvas" (10–300 wide, 1–500 rows, all white) → opens the editor.
+  Blank projects (`source: "blank"`) hide the picture-only width/colour controls in the studio.
+- Favicon: yellow star.

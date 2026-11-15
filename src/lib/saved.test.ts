@@ -17,6 +17,7 @@ const good = {
   rows: 2,
   progress: { row: 2, col: 1 },
   edited: true,
+  source: "image",
 };
 
 describe("sanitizeSaved", () => {

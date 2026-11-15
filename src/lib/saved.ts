@@ -11,6 +11,7 @@ export interface SavedProject {
   rows: number;
   progress: Position;
   edited: boolean;
+  source: "image" | "blank";
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
@@ -50,6 +51,7 @@ export function sanitizeSaved(raw: unknown): SavedProject {
     colors: clampInt(r.colors, LIMITS.colorsMin, LIMITS.colorsMax, LIMITS.colorsDefault),
     handedness,
     edited: r.edited === true,
+    source: r.source === "blank" ? ("blank" as const) : ("image" as const),
   };
   const palette = validPalette(r.palette) ? r.palette : null;
   if (!palette || !validGrid(r.grid, palette.length)) {

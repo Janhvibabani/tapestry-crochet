@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { isDark, rgbCss } from "@/lib/color";
 import { rowDim } from "@/lib/dim";
+import { cellsBetween } from "@/lib/edit";
 import type { Position } from "@/lib/progress";
 import type { Grid, PaletteColor } from "@/lib/types";
 
@@ -38,6 +39,7 @@ export const MIN_NUMBERED_CELL = 14;
 export function StitchGrid({ grid, palette, cellSize, highlightRow, focus = false, current, onCellClick, onPaintStart, onPaint, showRowNumbers, numbers, label }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
+  const lastCell = useRef<Position | null>(null);
   const rows = grid.length;
   const cols = grid[0]?.length ?? 0;
   const gutter = gutterWidth(showRowNumbers);
@@ -161,13 +163,18 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, focus = fals
         if (!p) return;
         e.currentTarget.setPointerCapture(e.pointerId);
         painting.current = true;
+        lastCell.current = p;
         onPaintStart?.();
         onPaint(p);
       }}
       onPointerMove={(e) => {
         if (!onPaint || !painting.current) return;
         const p = cellAt(e);
-        if (p) onPaint(p);
+        if (!p) return;
+        // Fill in every stitch between pointer events so fast strokes leave no gaps.
+        const from = lastCell.current ?? p;
+        for (const c of from.row === p.row && from.col === p.col ? [] : cellsBetween(from, p)) onPaint(c);
+        lastCell.current = p;
       }}
       onPointerUp={() => (painting.current = false)}
       onPointerCancel={() => (painting.current = false)}

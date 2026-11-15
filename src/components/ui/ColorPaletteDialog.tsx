@@ -2,24 +2,23 @@
 
 import { useEffect, useRef } from "react";
 import { hexToRgb, rgbCss, rgbToHex } from "@/lib/color";
-import type { PaletteColor, RGB } from "@/lib/types";
+import type { RGB } from "@/lib/types";
 import { YARN_COLORS } from "@/lib/yarnColors";
-import { Button } from "./Button";
 
 interface Props {
   title: string;
   /** Highlighted as the current colour, if any. */
   current?: RGB;
   onPick(rgb: RGB, yarnName?: string): void;
-  /** Optional "use one of your colours" row (merges into that colour). */
-  own?: { palette: PaletteColor[]; exclude: number; onPick(index: number): void };
+  /** Optional line under the title. */
+  hint?: string;
   onClose(): void;
 }
 
 const same = (a?: RGB, b?: RGB) => !!a && !!b && a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 
 /** A full yarn colour palette in a modal, plus a custom colour picker. */
-export function ColorPaletteDialog({ title, current, onPick, own, onClose }: Props) {
+export function ColorPaletteDialog({ title, hint, current, onPick, onClose }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const custom = useRef<HTMLInputElement>(null);
 
@@ -36,8 +35,6 @@ export function ColorPaletteDialog({ title, current, onPick, own, onClose }: Pro
     return () => el.removeEventListener("change", done);
   }, [onPick]);
 
-  const others = own?.palette.map((p, i) => ({ p, i })).filter(({ i }) => i !== own.exclude) ?? [];
-
   return (
     <dialog
       ref={ref}
@@ -49,7 +46,10 @@ export function ColorPaletteDialog({ title, current, onPick, own, onClose }: Pro
       className="paper m-auto max-h-[90dvh] w-[min(94vw,40rem)] overflow-y-auto bg-paper p-5 text-ink backdrop:bg-ink/30 sm:p-6"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-2xl">{title}</h2>
+        <div>
+          <h2 className="font-display text-2xl">{title}</h2>
+          {hint && <p className="text-base text-ink-soft">{hint}</p>}
+        </div>
         <button type="button" onClick={onClose} aria-label="close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-2xl hover:bg-blush">
           ×
         </button>
@@ -91,19 +91,6 @@ export function ColorPaletteDialog({ title, current, onPick, own, onClose }: Pro
         </label>
       </div>
 
-      {own && others.length > 0 && (
-        <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4">
-          <p className="text-base text-ink-soft">or use one of your colours (all its stitches join that colour)</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {others.map(({ p, i }) => (
-              <Button key={i} tone="paper" size="sm" onClick={() => own.onPick(i)}>
-                <span className="h-4 w-4 rounded-full border border-ink/50" style={{ background: rgbCss(p.rgb) }} aria-hidden />
-                {p.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
     </dialog>
   );
 }

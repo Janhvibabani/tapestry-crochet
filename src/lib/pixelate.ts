@@ -1,5 +1,6 @@
 import { kmeans, nearest, rgbToLab } from "./kmeans";
-import { defaultColorName, LIMITS, type Grid, type PaletteColor, type RGB } from "./types";
+import { LIMITS, type Grid, type PaletteColor, type RGB } from "./types";
+import { nearestYarnName, uniqueName } from "./yarnColors";
 
 export { kmeans };
 
@@ -93,6 +94,11 @@ export function pixelate(
   for (let y = 0; y < size.rows; y++) {
     grid.push(assignments.slice(y * size.cols, (y + 1) * size.cols).map((a) => used.get(a)!));
   }
-  const palette = order.map((old, i) => ({ rgb: centroids[old], name: defaultColorName(i) }));
+  const names: string[] = [];
+  const palette = order.map((old) => {
+    const name = uniqueName(nearestYarnName(centroids[old]), names);
+    names.push(name);
+    return { rgb: centroids[old], name };
+  });
   return { grid, palette, cols: size.cols, rows: size.rows };
 }

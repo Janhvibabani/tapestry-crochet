@@ -2,9 +2,9 @@
 
 Turn any picture into a crochet tapestry pattern. One colour per stitch, row by row.
 
-- **Upload** a picture. It's pixelated into a grid where every cell is one stitch in exactly one yarn colour.
-- **Pattern**: choose how many stitches wide (10–300; rows follow the picture's shape up to 500, stitches are square) and how many colours (2–12). Rename colours after your yarn. Tap a colour to swap it for any colour from a full yarn palette (or a custom colour, or one of your other colours), and add new colours.
-- **Fix the pattern by hand**: turn on *edit stitches* and tap or drag to repaint stitches, delete rows you don't want, and undo any edit.
+- **Upload** a picture (it's pixelated into a grid where every cell is one stitch in exactly one yarn colour), or **start with a blank canvas** of any size.
+- **Pattern**: choose how many stitches wide (10–300; rows follow the picture's shape up to 500, stitches are square) and how many colours (2–12). Colours are named after the closest yarn colour. Tap a colour to replace it everywhere with any colour from a full yarn palette (or a custom colour); picking a colour you already have joins the two.
+- **Edit stitches** (full-screen editor): brush, fill a patch, eraser (white), move; paint with any colour; undo. Delete rows from the row-by-row list.
 - **Left or right handed**: right-handers work Row 1 right → left, left-handers left → right, and every row turns. Each row in the pattern shows its direction, and the stitch counts are in working order. Row 1 is the bottom of the tapestry.
 - **Crochet mode** (full screen): pick the row and stitch you're on (or tap the grid). Your place is saved on this device.
   - **Focus mode** keeps the whole tapestry on screen but dims it, so only the row you're on stays bright.

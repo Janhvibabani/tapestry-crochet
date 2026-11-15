@@ -143,3 +143,42 @@ describe("editing", () => {
     expect(partial).toHaveProperty("edited", true);
   });
 });
+
+describe("blank canvas and editor tools", () => {
+  it("starts a blank white canvas of the chosen size", () => {
+    useProject.getState().newBlank(30, 20);
+    const st = useProject.getState();
+    expect(st.source).toBe("blank");
+    expect(st.image).toBeNull();
+    expect([st.gridCols, st.rows]).toEqual([30, 20]);
+    expect(st.palette).toEqual([{ rgb: [255, 255, 255], name: "snow white" }]);
+    expect(st.grid!.flat().every((c) => c === 0)).toBe(true);
+  });
+
+  it("fills a patch with any colour, adding it to the palette", () => {
+    useProject.getState().newBlank(10, 10);
+    useProject.getState().beginEdit();
+    const red = useProject.getState().ensureColor([214, 44, 44], "poppy red");
+    useProject.getState().fill({ row: 1, col: 0 }, red);
+    const st = useProject.getState();
+    expect(st.palette.map((p) => p.name)).toEqual(["snow white", "poppy red"]);
+    expect(st.grid!.flat().every((c) => c === red)).toBe(true);
+  });
+
+  it("drops colours nobody uses when tidying up", () => {
+    useProject.getState().newBlank(10, 10);
+    useProject.getState().ensureColor([20, 128, 130], "teal");
+    useProject.getState().tidyPalette();
+    expect(useProject.getState().palette).toHaveLength(1);
+  });
+
+  it("changing a colour to one you already have joins them", () => {
+    useProject.getState().newBlank(10, 1);
+    const st = useProject.getState();
+    const black = st.ensureColor([24, 22, 24], "black");
+    useProject.getState().paint({ row: 1, col: 0 }, black);
+    useProject.getState().recolor(black, [255, 255, 255], "snow white");
+    expect(useProject.getState().palette).toHaveLength(1);
+    expect(useProject.getState().grid).toEqual([new Array(10).fill(0)]);
+  });
+});

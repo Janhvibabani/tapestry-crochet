@@ -72,6 +72,6 @@ describe("pixelate", () => {
     const data = image(20, 20, (x) => (x < 10 ? [250, 200, 210, 255] : [90, 60, 40, 255]));
     const { palette } = pixelate(data, 20, 20, 10, 6);
     expect(palette).toHaveLength(2);
-    expect(palette.map((p) => p.name)).toEqual(["Colour A", "Colour B"]);
+    expect(palette.map((p) => p.name).sort()).toEqual(["blush", "chocolate"]);
   });
 });

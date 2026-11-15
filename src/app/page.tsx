@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, Swirl, YarnBall, YarnSquiggle } from "@/components/doodles/Doodles";
+import { BlankCanvas } from "@/components/upload/BlankCanvas";
 import { Dropzone } from "@/components/upload/Dropzone";
 import { ButtonLink } from "@/components/ui/Button";
 import { PaperCard } from "@/components/ui/PaperCard";
@@ -9,7 +10,7 @@ import { toneBg } from "@/components/ui/tones";
 import { useHydrated, useProject } from "@/store/project";
 
 const steps = [
-  { tone: "blush", text: "upload any picture" },
+  { tone: "blush", text: "upload any picture, or draw on a blank canvas" },
   { tone: "blue", text: "pick how many stitches wide and how many colours" },
   { tone: "butter", text: "follow the pattern row by row in crochet mode" },
 ] as const;
@@ -39,6 +40,14 @@ export default function Home() {
           </p>
           <div className="mt-6">
             <Dropzone />
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="h-0.5 flex-1 border-t-2 border-dashed border-ink/30" aria-hidden />
+            <span className="text-ink-soft">or</span>
+            <span className="h-0.5 flex-1 border-t-2 border-dashed border-ink/30" aria-hidden />
+          </div>
+          <div className="mt-3">
+            <BlankCanvas />
           </div>
           {hydrated && grid && (
             <div className="mt-4 flex flex-wrap items-center gap-3">
