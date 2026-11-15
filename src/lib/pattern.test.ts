@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPattern, colorTotals, gridRow, rowDirection, runAt } from "./pattern";
+import { buildPattern, colorTotals, gridRow, rowDirection, runAt, runPositions } from "./pattern";
 import type { Grid } from "./types";
 
 // top row, then bottom row
@@ -58,5 +58,22 @@ describe("runAt", () => {
     expect(runAt(runs, 2)).toEqual({ index: 0, within: 2 });
     expect(runAt(runs, 3)).toEqual({ index: 1, within: 1 });
     expect(runAt(runs, 5)).toEqual({ index: 1, within: 3 });
+  });
+});
+
+describe("runPositions", () => {
+  // top row then bottom row; right-handed: row 1 (bottom) is worked right→left
+  const g: Grid = [
+    [0, 0, 1, 1, 1],
+    [2, 1, 1, 0, 0],
+  ];
+  it("numbers stitches within each colour run, in working order, restarting at each colour change", () => {
+    expect(runPositions(g, "right")).toEqual([
+      [1, 2, 1, 2, 3], // row 2 goes left→right
+      [1, 2, 1, 2, 1], // row 1 goes right→left: 0,0 from the right = 1,2; then 1,1 = 1,2; then 2 = 1
+    ]);
+  });
+  it("flips with handedness", () => {
+    expect(runPositions(g, "left")[1]).toEqual([1, 1, 2, 1, 2]);
   });
 });

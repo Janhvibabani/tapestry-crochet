@@ -50,3 +50,19 @@ describe("addColor", () => {
     expect(out[2]).toEqual({ rgb: [9, 9, 9], name: "Colour B" });
   });
 });
+
+describe("recolor with a named yarn colour", () => {
+  it("takes the yarn's name when the colour still has its default name", () => {
+    expect(recolor(palette, 0, [1, 1, 1], "dusty pink")[0]).toEqual({ rgb: [1, 1, 1], name: "dusty pink" });
+  });
+  it("keeps a name you chose yourself", () => {
+    const named: PaletteColor[] = [{ rgb: [0, 0, 0], name: "my black" }];
+    expect(recolor(named, 0, [1, 1, 1], "dusty pink")[0].name).toBe("my black");
+  });
+});
+
+describe("addColor with a named yarn colour", () => {
+  it("uses the yarn's name", () => {
+    expect(addColor(palette, [9, 9, 9], "sage").at(-1)!.name).toBe("sage");
+  });
+});

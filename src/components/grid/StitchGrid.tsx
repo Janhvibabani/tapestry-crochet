@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { rgbCss } from "@/lib/color";
+import { isDark, rgbCss } from "@/lib/color";
 import type { Position } from "@/lib/progress";
 import type { Grid, PaletteColor } from "@/lib/types";
 
@@ -17,6 +17,8 @@ interface Props {
   onPaintStart?(): void;
   onPaint?(p: Position): void;
   showRowNumbers?: boolean;
+  /** Per-stitch numbers to print on the cells (same shape as grid); shown when cells are big enough. */
+  numbers?: number[][];
   label: string;
 }
 
@@ -27,7 +29,10 @@ export function gutterWidth(showRowNumbers: boolean | undefined) {
 }
 
 /** Canvas rendering of the stitch grid. Row numbers run up the left side, Row 1 at the bottom. */
-export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onCellClick, onPaintStart, onPaint, showRowNumbers, label }: Props) {
+/** Smallest cell size that can carry a readable number. */
+export const MIN_NUMBERED_CELL = 14;
+
+export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onCellClick, onPaintStart, onPaint, showRowNumbers, numbers, label }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
   const rows = grid.length;
@@ -55,6 +60,19 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onC
       for (let x = 0; x < cols; x++) {
         ctx.fillStyle = colours[grid[y][x]] ?? "#fff";
         ctx.fillRect(ox + x * cellSize, oy + y * cellSize, cellSize, cellSize);
+      }
+    }
+
+    if (numbers && cellSize >= MIN_NUMBERED_CELL) {
+      const ink = palette.map((p) => (isDark(p.rgb) ? "#fffaf0" : "#5b3a29"));
+      ctx.font = `${Math.round(cellSize * 0.5)}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          ctx.fillStyle = ink[grid[y][x]] ?? "#5b3a29";
+          ctx.fillText(String(numbers[y][x]), ox + x * cellSize + cellSize / 2, oy + y * cellSize + cellSize / 2 + 0.5);
+        }
       }
     }
 
@@ -109,7 +127,7 @@ export function StitchGrid({ grid, palette, cellSize, highlightRow, current, onC
       }
       ctx.globalAlpha = 1;
     }
-  }, [grid, palette, cellSize, highlightRow, current, rows, cols, gutter, width, height, showRowNumbers]);
+  }, [grid, palette, cellSize, highlightRow, current, rows, cols, gutter, width, height, showRowNumbers, numbers]);
 
   const cellAt = (e: React.PointerEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>): Position | null => {
     const r = e.currentTarget.getBoundingClientRect();

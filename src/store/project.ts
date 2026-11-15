@@ -40,8 +40,8 @@ export interface ProjectState {
   beginEdit(): void;
   paint(p: Position, color: number): void;
   deleteRow(row: number): void;
-  recolor(i: number, rgb: RGB): void;
-  addColor(rgb: RGB): void;
+  recolor(i: number, rgb: RGB, yarnName?: string): void;
+  addColor(rgb: RGB, yarnName?: string): void;
   undo(): void;
 }
 
@@ -132,13 +132,13 @@ export const useProject = create<ProjectState>()(
           const moved = progress.row > row ? { ...progress, row: progress.row - 1 } : progress;
           set({ grid: next, rows: next.length, edited: true, progress: clampPosition(moved, next.length, gridCols) });
         },
-        recolor: (i, rgb) => {
+        recolor: (i, rgb, yarnName) => {
           snapshot();
-          set({ palette: recolor(get().palette, i, rgb), edited: true });
+          set({ palette: recolor(get().palette, i, rgb, yarnName), edited: true });
         },
-        addColor: (rgb) => {
+        addColor: (rgb, yarnName) => {
           snapshot();
-          set({ palette: addColor(get().palette, rgb), edited: true });
+          set({ palette: addColor(get().palette, rgb, yarnName), edited: true });
         },
         undo: () => {
           const { history, progress } = get();

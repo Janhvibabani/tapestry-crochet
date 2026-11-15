@@ -58,3 +58,25 @@ export function runAt(runs: Run[], stitch: number): { index: number; within: num
   const last = runs.length - 1;
   return { index: last, within: runs[last]?.count ?? 0 };
 }
+
+/**
+ * For every stitch (same shape as the grid), its 1-based position inside its
+ * colour run, counted in that row's working direction. Restarts at 1 whenever
+ * the colour changes.
+ */
+export function runPositions(grid: Grid, handedness: Handedness): number[][] {
+  return grid.map((cells, y) => {
+    const row = grid.length - y;
+    const ltr = rowDirection(row, handedness) === "ltr";
+    const out = new Array<number>(cells.length);
+    let prev = -1;
+    let n = 0;
+    for (let i = 0; i < cells.length; i++) {
+      const x = ltr ? i : cells.length - 1 - i;
+      n = cells[x] === prev ? n + 1 : 1;
+      prev = cells[x];
+      out[x] = n;
+    }
+    return out;
+  });
+}

@@ -198,3 +198,14 @@ Requested after the first build:
 - Crochet mode is a full-screen view (covers the site chrome) with an optional browser full-screen button.
 - Limits raised: stitches wide 10–300 (was 150), rows cap 500 (was 300). ("max pixels" read as "allow bigger patterns".)
 - Studio layout: wider page; settings + colours on the left, preview in the middle, "row by row" in its own right column (≥1280px).
+
+## Update 2: full yarn palette, focus mode, stitch numbers
+
+- Changing or adding a colour opens a full named yarn palette (48 colours) plus a custom colour picker; picking a yarn
+  colour also takes its name if the colour still has its default name. Merging into an existing colour is kept as a
+  secondary option inside that picker.
+- Crochet mode has a **focus mode** (preference saved per device): current row drawn big with the next row above it
+  (same column alignment), run chips for the row, next stitch / next row controls.
+- Optional **stitch numbers** (per device): each stitch shows its position within its colour run, counted in that
+  row's working direction (so it follows handedness) and restarting at 1 on every colour change. Shown on the grid when
+  stitches are ≥14px (turning numbers on zooms in if needed); always shown in focus mode.

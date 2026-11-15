@@ -16,11 +16,17 @@ export function deleteRow(grid: Grid, row: number): Grid {
   return grid.filter((_, i) => i !== y);
 }
 
-export function recolor(palette: PaletteColor[], i: number, rgb: RGB): PaletteColor[] {
-  return palette.map((p, j) => (j === i ? { ...p, rgb } : p));
+const isDefaultName = (name: string) => /^Colour [A-Z]$/.test(name);
+
+/** Change a colour's shade. A yarn name is taken only if the colour still has its default name. */
+export function recolor(palette: PaletteColor[], i: number, rgb: RGB, yarnName?: string): PaletteColor[] {
+  return palette.map((p, j) =>
+    j === i ? { rgb, name: yarnName && isDefaultName(p.name) ? yarnName : p.name } : p,
+  );
 }
 
-export function addColor(palette: PaletteColor[], rgb: RGB): PaletteColor[] {
+export function addColor(palette: PaletteColor[], rgb: RGB, yarnName?: string): PaletteColor[] {
+  if (yarnName) return [...palette, { rgb, name: yarnName }];
   const used = new Set(palette.map((p) => p.name));
   let n = 0;
   while (used.has(defaultColorName(n))) n++;
