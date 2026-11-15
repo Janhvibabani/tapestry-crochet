@@ -62,3 +62,33 @@ describe("project store", () => {
     expect(partial).toHaveProperty("grid");
   });
 });
+
+describe("loading saved data", () => {
+  it("survives broken saved data and still finishes loading", async () => {
+    mem.set("tapestry-project-v1", JSON.stringify({ state: { grid: [[0, 9]], progress: null }, version: 0 }));
+    await useProject.persist.rehydrate();
+    expect(useProject.persist.hasHydrated()).toBe(true);
+    expect(useProject.getState().grid).toBeNull();
+  });
+
+  it("survives saved data that isn't JSON", async () => {
+    mem.set("tapestry-project-v1", "{oops");
+    await useProject.persist.rehydrate();
+    expect(useProject.persist.hasHydrated()).toBe(true);
+  });
+
+  it("takes the grid size from the saved grid", async () => {
+    const state = {
+      grid: [[0, 0], [0, 0], [0, 0]],
+      palette: [{ rgb: [1, 2, 3], name: "x" }],
+      rows: 120,
+      gridCols: 50,
+      progress: { row: 100, col: 40 },
+    };
+    mem.set("tapestry-project-v1", JSON.stringify({ state, version: 0 }));
+    await useProject.persist.rehydrate();
+    const st = useProject.getState();
+    expect([st.rows, st.gridCols]).toEqual([3, 2]);
+    expect(st.progress).toEqual({ row: 3, col: 1 });
+  });
+});

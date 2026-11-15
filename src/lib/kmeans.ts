@@ -1,6 +1,6 @@
 import type { RGB } from "./types";
 
-type Lab = [number, number, number];
+export type Lab = [number, number, number];
 
 /** Small seeded PRNG so the same picture always gives the same palette. */
 function mulberry32(seed: number) {
@@ -31,6 +31,19 @@ export function rgbToLab([r, g, b]: RGB): Lab {
   const fy = f(y);
   const fz = f(z);
   return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+export function nearest(centers: Lab[], p: Lab): number {
+  let best = 0;
+  let bestD = Infinity;
+  for (let c = 0; c < centers.length; c++) {
+    const d = dist2(p, centers[c]);
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return best;
 }
 
 function dist2(a: Lab, b: Lab) {

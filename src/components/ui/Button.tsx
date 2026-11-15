@@ -9,7 +9,7 @@ const base =
 
 type Variant = { tone?: Tone; size?: "md" | "sm"; className?: string; children: ReactNode };
 
-const sizeCls = (size: "md" | "sm") => (size === "sm" ? "min-h-9 px-3 py-1 text-base" : "");
+const sizeCls = (size: "md" | "sm") => (size === "sm" ? "min-h-11 px-3 py-1 text-base" : "");
 
 export function Button({ tone = "butter", size = "md", className = "", ...rest }: Variant & ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" className={`${base} ${toneBg[tone]} ${sizeCls(size)} ${className}`} {...rest} />;

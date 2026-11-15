@@ -1,11 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist, type StorageValue } from "zustand/middleware";
 import { useSyncExternalStore } from "react";
 import type { LoadedImage } from "@/lib/loadImage";
 import { mergeColors, renameColor } from "@/lib/palette";
 import { pixelate } from "@/lib/pixelate";
+import { sanitizeSaved } from "@/lib/saved";
 import { START, clampPosition, type Position } from "@/lib/progress";
 import { LIMITS, type Grid, type Handedness, type PaletteColor } from "@/lib/types";
 
@@ -30,6 +31,8 @@ export interface ProjectState {
   merge(from: number, into: number): void;
   setProgress(p: Position): void;
 }
+
+type Saved = Omit<ProjectState, "image">;
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
 
@@ -82,12 +85,33 @@ export const useProject = create<ProjectState>()(
     },
     {
       name: "tapestry-project-v1",
-      storage: createJSONStorage(() => localStorage),
+      storage: {
+        // Never throw: unreadable saved data just means "no saved project".
+        getItem: (name) => {
+          try {
+            const raw = localStorage.getItem(name);
+            const parsed: unknown = raw ? JSON.parse(raw) : null;
+            return typeof parsed === "object" && parsed !== null ? (parsed as StorageValue<Saved>) : null;
+          } catch {
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch {
+            // storage full or blocked: keep working in memory
+          }
+        },
+        removeItem: (name) => {
+          try {
+            localStorage.removeItem(name);
+          } catch {}
+        },
+      },
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       partialize: ({ image, ...rest }) => rest,
-      onRehydrateStorage: () => (state) => {
-        if (state?.grid) state.setProgress(state.progress);
-      },
+      merge: (persisted, current) => ({ ...current, ...sanitizeSaved(persisted) }),
     },
   ),
 );

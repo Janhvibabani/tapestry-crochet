@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageCells, gridSize, kmeans, pixelate } from "./pixelate";
+import { gridSize, kmeans, pixelate } from "./pixelate";
 import type { RGB } from "./types";
 
 type RGBA = [number, number, number, number];
@@ -26,21 +26,6 @@ describe("gridSize", () => {
   });
 });
 
-describe("averageCells", () => {
-  it("averages each cell's pixels", () => {
-    const data = image(4, 2, (x) => (x < 2 ? [255, 0, 0, 255] : [0, 0, 255, 255]));
-    expect(averageCells(data, 4, 2, 2, 1)).toEqual([
-      [255, 0, 0],
-      [0, 0, 255],
-    ]);
-  });
-
-  it("composites transparency onto white", () => {
-    const data = image(2, 2, () => [0, 0, 0, 0]);
-    expect(averageCells(data, 2, 2, 1, 1)).toEqual([[255, 255, 255]]);
-  });
-});
-
 describe("kmeans", () => {
   it("is deterministic", () => {
     const pts: RGB[] = Array.from({ length: 50 }, (_, i) => [i * 5, 255 - i * 5, (i * 37) % 256]);
@@ -64,6 +49,23 @@ describe("pixelate", () => {
         expect(v).toBeLessThan(palette.length);
       }
     }
+  });
+
+  it("a two-colour logo whose edges don't line up with the grid gives two colours", () => {
+    // pink circle on white, 317×211 so cell edges cut through the circle's outline
+    const data = image(317, 211, (x, y) =>
+      (x - 158) ** 2 + (y - 105) ** 2 < 80 ** 2 ? [246, 207, 216, 255] : [255, 255, 255, 255],
+    );
+    for (const cols of [40, 63, 150]) {
+      const { palette } = pixelate(data, 317, 211, cols, 6);
+      expect(palette).toHaveLength(2);
+    }
+  });
+
+  it("turns a transparent picture white", () => {
+    const data = image(20, 20, () => [0, 0, 0, 0]);
+    const { palette } = pixelate(data, 20, 20, 10, 6);
+    expect(palette.map((p) => p.rgb)).toEqual([[255, 255, 255]]);
   });
 
   it("drops unused palette entries", () => {

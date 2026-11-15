@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { HandednessToggle } from "@/components/ui/HandednessToggle";
@@ -14,22 +14,36 @@ type Change = { kind: "cols" | "colors"; value: number };
 export function SettingsPanel() {
   const { image, cols, colors, progress, gridCols, handedness, setCols, setColors } = useProject();
   const [draftCols, setDraftCols] = useState(cols);
+  const [text, setText] = useState(String(cols));
   const [pending, setPending] = useState<Change | null>(null);
+  const sliderTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const canChange = image !== null;
 
   const apply = (c: Change) => (c.kind === "cols" ? setCols(c.value) : setColors(c.value));
   const request = (c: Change) => {
+    if (c.kind === "cols" && c.value === cols) return;
     if (hasProgress(progress, gridCols, handedness)) setPending(c);
     else apply(c);
   };
+  const showCols = (v: number) => {
+    setDraftCols(v);
+    setText(String(v));
+  };
 
-  // Debounce the width slider so dragging doesn't re-pixelate on every pixel.
-  useEffect(() => {
-    if (draftCols === cols) return;
-    const t = setTimeout(() => request({ kind: "cols", value: draftCols }), 250);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftCols]);
+  // Slider: debounced so dragging doesn't re-pixelate on every step.
+  const onSlide = (v: number) => {
+    showCols(v);
+    clearTimeout(sliderTimer.current);
+    sliderTimer.current = setTimeout(() => request({ kind: "cols", value: v }), 250);
+  };
+
+  // Number box: free typing; applied (and clamped) only on Enter or leaving the box.
+  const commitText = () => {
+    const n = Number.parseInt(text, 10);
+    const v = Number.isFinite(n) ? Math.min(LIMITS.colsMax, Math.max(LIMITS.colsMin, n)) : cols;
+    showCols(v);
+    request({ kind: "cols", value: v });
+  };
 
   return (
     <PaperCard tone="lilac" tilt={-1} tape="butter" className="px-5 pb-6 pt-8">
@@ -50,10 +64,12 @@ export function SettingsPanel() {
               aria-label="stitches wide (number)"
               min={LIMITS.colsMin}
               max={LIMITS.colsMax}
-              value={draftCols}
+              inputMode="numeric"
+              value={text}
               disabled={!canChange}
-              onChange={(e) => setDraftCols(Number(e.target.value) || LIMITS.colsMin)}
-              onBlur={() => setDraftCols((v) => Math.min(LIMITS.colsMax, Math.max(LIMITS.colsMin, v)))}
+              onChange={(e) => setText(e.target.value)}
+              onBlur={commitText}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
               className="paper w-20 bg-paper px-2 py-0.5 text-right"
             />
           </label>
@@ -64,7 +80,7 @@ export function SettingsPanel() {
             max={LIMITS.colsMax}
             value={draftCols}
             disabled={!canChange}
-            onChange={(e) => setDraftCols(Number(e.target.value))}
+            onChange={(e) => onSlide(Number(e.target.value))}
             className="mt-2 w-full accent-[#5b3a29]"
           />
         </div>
@@ -112,7 +128,7 @@ export function SettingsPanel() {
             setPending(null);
           }}
           onCancel={() => {
-            if (pending.kind === "cols") setDraftCols(cols);
+            if (pending.kind === "cols") showCols(cols);
             setPending(null);
           }}
         />

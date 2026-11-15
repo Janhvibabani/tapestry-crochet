@@ -1,4 +1,4 @@
-import { kmeans } from "./kmeans";
+import { kmeans, nearest, rgbToLab } from "./kmeans";
 import { defaultColorName, LIMITS, type Grid, type PaletteColor, type RGB } from "./types";
 
 export { kmeans };
@@ -13,46 +13,17 @@ export function gridSize(imgW: number, imgH: number, cols: number): { cols: numb
   return { cols, rows };
 }
 
-/**
- * Box-average the RGBA image into cols × rows cells (row-major, top-left
- * first). Transparent pixels are composited onto white.
- */
-export function averageCells(data: Uint8ClampedArray, imgW: number, imgH: number, cols: number, rows: number): RGB[] {
-  const sums = new Float64Array(cols * rows * 4);
-  const pixel = (x: number, y: number): RGB => {
-    const o = (y * imgW + x) * 4;
-    const a = data[o + 3] / 255;
-    return [data[o] * a + 255 * (1 - a), data[o + 1] * a + 255 * (1 - a), data[o + 2] * a + 255 * (1 - a)];
-  };
-  for (let y = 0; y < imgH; y++) {
-    const cy = Math.min(rows - 1, Math.floor(((y + 0.5) * rows) / imgH));
-    for (let x = 0; x < imgW; x++) {
-      const cx = Math.min(cols - 1, Math.floor(((x + 0.5) * cols) / imgW));
-      const [r, g, b] = pixel(x, y);
-      const s = (cy * cols + cx) * 4;
-      sums[s] += r;
-      sums[s + 1] += g;
-      sums[s + 2] += b;
-      sums[s + 3] += 1;
-    }
-  }
-  const out: RGB[] = [];
-  for (let cy = 0; cy < rows; cy++) {
-    for (let cx = 0; cx < cols; cx++) {
-      const s = (cy * cols + cx) * 4;
-      const n = sums[s + 3];
-      if (n > 0) {
-        out.push([Math.round(sums[s] / n), Math.round(sums[s + 1] / n), Math.round(sums[s + 2] / n)]);
-      } else {
-        // Grid finer than the picture: sample the pixel under the cell centre.
-        const x = Math.min(imgW - 1, Math.floor(((cx + 0.5) * imgW) / cols));
-        const y = Math.min(imgH - 1, Math.floor(((cy + 0.5) * imgH) / rows));
-        out.push(pixel(x, y).map(Math.round) as RGB);
-      }
-    }
-  }
-  return out;
+/** Pixel at (x, y) composited onto white. */
+function pixelOnWhite(data: Uint8ClampedArray, i: number): RGB {
+  const a = data[i + 3] / 255;
+  return [
+    Math.round(data[i] * a + 255 * (1 - a)),
+    Math.round(data[i + 1] * a + 255 * (1 - a)),
+    Math.round(data[i + 2] * a + 255 * (1 - a)),
+  ];
 }
+
+const MAX_SAMPLES = 40_000;
 
 /** Turn an RGBA image into a stitch grid where every cell is exactly one palette colour. */
 export function pixelate(
@@ -63,8 +34,54 @@ export function pixelate(
   colors: number,
 ): { grid: Grid; palette: PaletteColor[]; cols: number; rows: number } {
   const size = gridSize(imgW, imgH, cols);
-  const cells = averageCells(data, imgW, imgH, size.cols, size.rows);
-  const { centroids, assignments } = kmeans(cells, colors);
+  const total = imgW * imgH;
+
+  // 1. Pick the palette from the picture's own pixels (an even sample of them).
+  const step = Math.max(1, Math.floor(total / MAX_SAMPLES));
+  const samples: RGB[] = [];
+  for (let p = 0; p < total; p += step) samples.push(pixelOnWhite(data, p * 4));
+  const { centroids } = kmeans(samples, colors);
+  const labs = centroids.map(rgbToLab);
+
+  // 2. Every pixel votes for its nearest palette colour; each cell takes the
+  //    colour most of its pixels voted for. Blended edge colours never win.
+  const votes = new Uint32Array(size.cols * size.rows * centroids.length);
+  const cache = new Map<number, number>();
+  for (let y = 0; y < imgH; y++) {
+    const cy = Math.min(size.rows - 1, Math.floor(((y + 0.5) * size.rows) / imgH));
+    for (let x = 0; x < imgW; x++) {
+      const cx = Math.min(size.cols - 1, Math.floor(((x + 0.5) * size.cols) / imgW));
+      const rgb = pixelOnWhite(data, (y * imgW + x) * 4);
+      const key = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
+      let c = cache.get(key);
+      if (c === undefined) {
+        c = nearest(labs, rgbToLab(rgb));
+        cache.set(key, c);
+      }
+      votes[(cy * size.cols + cx) * centroids.length + c]++;
+    }
+  }
+  const assignments: number[] = new Array(size.cols * size.rows);
+  for (let cell = 0; cell < assignments.length; cell++) {
+    let best = 0;
+    let bestN = -1;
+    for (let c = 0; c < centroids.length; c++) {
+      const n = votes[cell * centroids.length + c];
+      if (n > bestN) {
+        bestN = n;
+        best = c;
+      }
+    }
+    if (bestN === 0) {
+      // Grid finer than the picture: no pixel centre landed here, use the pixel under the cell centre.
+      const cx = cell % size.cols;
+      const cy = Math.floor(cell / size.cols);
+      const x = Math.min(imgW - 1, Math.floor(((cx + 0.5) * imgW) / size.cols));
+      const y = Math.min(imgH - 1, Math.floor(((cy + 0.5) * imgH) / size.rows));
+      best = nearest(labs, rgbToLab(pixelOnWhite(data, (y * imgW + x) * 4)));
+    }
+    assignments[cell] = best;
+  }
 
   // Drop clusters nobody uses and reindex.
   const used = new Map<number, number>();

@@ -41,6 +41,7 @@ export default function CrochetPage() {
 
   const pattern = buildPattern(grid, handedness);
   const row = pattern[progress.row - 1];
+  if (!row) return <EmptyState />;
   const stitch = stitchNumber(progress, gridCols, handedness);
 
   return (

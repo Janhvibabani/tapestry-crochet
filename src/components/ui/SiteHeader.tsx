@@ -14,7 +14,7 @@ export function SiteHeader() {
   const path = usePathname();
   return (
     <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:pt-6">
-      <Link href="/" className="group flex items-center gap-2 rounded-lg">
+      <Link href="/" className="group flex min-h-11 items-center gap-2 rounded-lg">
         <Star className="h-8 w-8 transition-transform group-hover:rotate-12" />
         <span className="font-display text-2xl sm:text-3xl">tiny tapestry</span>
       </Link>
@@ -26,7 +26,7 @@ export function SiteHeader() {
               key={l.href}
               href={l.href}
               aria-current={active ? "page" : undefined}
-              className={`paper px-3 py-1 text-base sm:text-lg ${active ? "bg-lilac" : "bg-paper/80 hover:bg-butter"}`}
+              className={`paper inline-flex min-h-11 items-center px-3 py-1 text-base sm:text-lg ${active ? "bg-lilac" : "bg-paper/80 hover:bg-butter"}`}
             >
               {l.label}
             </Link>

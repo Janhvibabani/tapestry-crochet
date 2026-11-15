@@ -43,7 +43,7 @@ export function CrochetControls() {
               if (v >= 1) setProgress(changeRow(progress, Math.min(rows, Math.round(v)) - progress.row, rows, cols, handedness));
             }}
             onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            className="paper w-20 bg-paper px-2 py-1 text-right"
+            className="paper min-h-11 w-20 bg-paper px-2 py-1 text-right"
           />
         </label>
         <label className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export function CrochetControls() {
               if (v >= 1) setProgress(positionFromStitch(progress.row, v, cols, handedness));
             }}
             onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            className="paper w-20 bg-paper px-2 py-1 text-right"
+            className="paper min-h-11 w-20 bg-paper px-2 py-1 text-right"
           />
         </label>
       </div>
