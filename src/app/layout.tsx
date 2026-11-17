@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Cherry_Bomb_One, Patrick_Hand } from "next/font/google";
 import { SiteHeader } from "@/components/ui/SiteHeader";
 import "./globals.css";
@@ -26,6 +27,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="px-4 py-8 text-center text-ink-soft text-base">
           made with yarn &amp; love ✿ one colour per stitch
         </footer>
+        {/* Page-view analytics; only sends data on the deployed Vercel site, not on localhost. */}
+        <Analytics />
       </body>
     </html>
   );

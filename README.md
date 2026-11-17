@@ -14,6 +14,8 @@ Turn any picture into a crochet tapestry pattern. One colour per stitch, row by 
 
 Everything runs in the browser for now; there's no backend yet.
 
+Page views are counted with [Vercel Web Analytics](https://vercel.com/docs/analytics) (`<Analytics />` in `src/app/layout.tsx`). It only sends data from the deployed Vercel site, and only after Analytics is turned on for the project in the Vercel dashboard. On localhost it just logs to the browser console.
+
 ## Develop
 
 ```bash
