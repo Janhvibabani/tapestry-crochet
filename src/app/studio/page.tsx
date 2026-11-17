@@ -8,6 +8,7 @@ import {
   useFitCellSize,
 } from "@/components/grid/StitchGrid";
 import { usePinchZoom } from "@/components/grid/usePinchZoom";
+import { downloadChart } from "@/lib/downloadChart";
 import { PalettePanel } from "@/components/studio/PalettePanel";
 import { PatternList } from "@/components/studio/PatternList";
 import { SettingsPanel } from "@/components/studio/SettingsPanel";
@@ -34,6 +35,8 @@ export default function StudioPage() {
   const previewRef = useRef<HTMLDivElement>(null);
   const fit = useFitCellSize(previewRef, gridCols, gutterWidth(true), 2, 22);
   const [zoom, setZoom] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const cellSize = zoom ?? fit;
   const zoomAt = usePinchZoom({
     boxRef: previewRef,
@@ -82,12 +85,39 @@ export default function StudioPage() {
                   ↶ undo
                 </Button>
               )}
+              <Button
+                tone="mint"
+                size="sm"
+                disabled={saving}
+                onClick={async () => {
+                  setSaving(true);
+                  setSaveError(false);
+                  try {
+                    await downloadChart(grid, palette, handedness);
+                  } catch {
+                    setSaveError(true);
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                {saving ? "saving…" : "⤓ download chart"}
+              </Button>
               <ButtonLink href="/edit" tone="butter" size="sm">
                 ✎ edit stitches
               </ButtonLink>
             </div>
           </div>
 
+          {saveError && (
+            <p
+              role="alert"
+              className="paper mb-2 bg-blush px-3 py-1.5 text-base"
+            >
+              The chart couldn&apos;t be saved. Try again, or try another
+              browser.
+            </p>
+          )}
           <div className="mb-2 flex items-center justify-end gap-2">
             <span className="mr-auto text-sm text-ink-soft">
               pinch or Ctrl/⌘ + scroll to zoom

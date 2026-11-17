@@ -236,3 +236,12 @@ bright (no separate big-row view). Normal mode keeps fading only finished rows.
 Correction (user): zooming must change only the stitch-grid panel, never the whole page. In crochet mode a pinch
 anywhere on screen zooms the grid (the overlay is `touch-action: pan-x pan-y` and catches pinches); the pattern
 page's preview panel has the same pinch/trackpad zoom plus − / + / fit buttons, and scrolls inside itself.
+
+## Update 5: chart download and hex colours
+
+- "Download chart" (pattern page) saves a PNG: title + size/handedness note, the grid with faint lines per stitch and
+  strong lines every 10, row numbers on the side each row starts with a direction arrow, stitch numbers along the bottom
+  counted from where row 1 starts, and a colour key (name, hex, stitch count). Stitch size 4–24px, chosen so the grid
+  stays ≤14M pixels (under Safari's canvas limit); a 300×500 chart is 2872×4782.
+- The colour picker takes a typed hex code (#RRGGBB or #RGB, with or without #), with a live preview and an inline error
+  for invalid input; it sits at the top of the picker. The colours list shows each colour's hex code.
